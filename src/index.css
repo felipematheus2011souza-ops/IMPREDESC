@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-gradient-1: #f8f9fa;
+  --bg-gradient-2: #f0f4ff;
+  --accent-1: #6366f1; /* indigo */
+  --accent-2: #7c3aed; /* purple */
+  --muted-1: #64748b;
+  --glass: rgba(255,255,255,0.72);
+  --card-bg: rgba(255,255,255,0.85);
+  --card-border: rgba(226,232,240,0.6);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -13,115 +24,106 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #f8f9fa 0%, #f0f4ff 50%, #f8f9ff 100%);
+  background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, #f8f9ff 100%);
   min-height: 100vh;
+  color-scheme: light;
 }
 
-/* Gradient Background Animation */
-@keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+/* Design tokens & utilities */
+.container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Subtle animations */
+@keyframes float-up {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Smooth transitions */
-
 /* Replaced @apply usages with explicit CSS so Tailwind v4 build won't fail on @apply resolution */
 .btn-primary {
   /* px-6 = 1.5rem, py-2.5 = 0.625rem */
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-  border-radius: 0.5rem; /* rounded-lg */
-  font-weight: 600; /* font-semibold */
-  transition: all 0.3s ease;
+  padding-top: 0.75rem; /* slightly larger */
+  padding-bottom: 0.75rem;
+  border-radius: 0.75rem; /* more modern radius */
+  font-weight: 700; /* bolder */
+  transition: all 260ms cubic-bezier(.2,.9,.2,1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.75rem;
 }
 .btn-primary:hover {
-  transform: scale(1.05);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 30px rgba(99,102,241,0.08);
 }
-.btn-primary:active {
-  transform: scale(0.95);
-}
+.btn-primary:active { transform: translateY(0) scale(0.99); }
 
 .card-base {
   border-radius: 1rem; /* rounded-2xl */
-  border: 1px solid rgba(148, 163, 184, 0.5); /* border-slate-200/50 */
-  background-color: rgba(255, 255, 255, 0.8); /* bg-white/80 */
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px); /* backdrop-blur-xs approximation */
-  box-shadow: 0 1px 2px rgba(2,6,23,0.04); /* shadow-sm approximation */
-  transition: all 0.3s ease;
+  border: 1px solid var(--card-border); /* border-slate-200/50 */
+  background-color: var(--card-bg); /* bg-white/80 */
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px); /* stronger blur */
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06); /* subtle shadow */
+  transition: transform 300ms ease, box-shadow 300ms ease;
+  padding: 1.25rem;
 }
-.card-base:hover {
-  box-shadow: 0 10px 15px rgba(79,70,229,0.06); /* hover:shadow-lg tint */
-}
+.card-base:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(15,23,42,0.08); }
 
-.card-hover:hover {
-  border-color: rgba(99,102,241,0.2); /* hover:border-indigo-300/50 */
-  box-shadow: 0 10px 15px rgba(79,70,229,0.06); /* hover:shadow-lg */
-}
+.card-hover:hover { border-color: rgba(99,102,241,0.18); box-shadow: 0 18px 40px rgba(99,102,241,0.06); }
 
-.gradient-text {
-  background-image: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); /* from-indigo-600 to-purple-600 */
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+.gradient-text { background-image: linear-gradient(90deg, var(--accent-1) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-.icon-glow {
-  position: relative;
-}
+.icon-glow { position: relative; display: inline-flex; }
 .icon-glow::after {
   content: '';
   position: absolute;
   inset: 0;
   background: currentColor;
-  filter: blur(12px); /* blur-lg approx */
+  filter: blur(10px);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 220ms ease;
   pointer-events: none;
 }
-.icon-glow:hover::after {
-  opacity: 0.2;
-}
+.icon-glow:hover::after { opacity: 0.15; }
+
+/* Small helpers */
+.kpi-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+.kpi-label { color: var(--muted-1); font-weight: 600; font-size: 0.875rem; }
 
 /* Smooth scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Selection styling */
-::selection {
-  background: rgba(99, 102, 241, 0.2);
-  color: inherit;
-}
+::selection { background: rgba(99, 102, 241, 0.18); color: inherit; }
 
 /* Prevent layout shift on scrollbar */
-html {
-  overflow-y: scroll;
-}
+html { overflow-y: scroll; }
+
+/* Logo styles */
+.logo-wrap { display: flex; align-items: center; gap: 0.75rem; }
+.logo-mark { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; box-shadow: 0 6px 18px rgba(99,102,241,0.12); transform: translateZ(0); }
+.logo-word { font-weight: 800; font-size: 1.125rem; letter-spacing: -0.02em; }
+
+/* Utility for subtle float */
+.float-subtle { animation: float-up 4s ease-in-out infinite; }
