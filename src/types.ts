@@ -34,6 +34,8 @@ export interface ReceitaPrecificada {
   custoTotalUnitario: number;
   precoSugerido: number;
   precoSugeridoUnitario: number;
+  // novo: ajuste porcentual aplicado ao salvar (ex: -10, 0, +25)
+  priceAdjustmentPercent?: number;
   dataCriacao: string;
 }
 
