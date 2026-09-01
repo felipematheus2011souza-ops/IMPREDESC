@@ -33,26 +33,68 @@ body {
 }
 
 /* Smooth transitions */
-@layer components {
-  .btn-primary {
-    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95;
-  }
 
-  .card-base {
-    @apply rounded-2xl border border-slate-200/50 bg-white/80 backdrop-blur-xs shadow-sm hover:shadow-lg transition-all duration-300;
-  }
+/* Replaced @apply usages with explicit CSS so Tailwind v4 build won't fail on @apply resolution */
+.btn-primary {
+  /* px-6 = 1.5rem, py-2.5 = 0.625rem */
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  border-radius: 0.5rem; /* rounded-lg */
+  font-weight: 600; /* font-semibold */
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-primary:hover {
+  transform: scale(1.05);
+}
+.btn-primary:active {
+  transform: scale(0.95);
+}
 
-  .card-hover {
-    @apply hover:border-indigo-300/50 hover:shadow-lg hover:shadow-indigo-500/10;
-  }
+.card-base {
+  border-radius: 1rem; /* rounded-2xl */
+  border: 1px solid rgba(148, 163, 184, 0.5); /* border-slate-200/50 */
+  background-color: rgba(255, 255, 255, 0.8); /* bg-white/80 */
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px); /* backdrop-blur-xs approximation */
+  box-shadow: 0 1px 2px rgba(2,6,23,0.04); /* shadow-sm approximation */
+  transition: all 0.3s ease;
+}
+.card-base:hover {
+  box-shadow: 0 10px 15px rgba(79,70,229,0.06); /* hover:shadow-lg tint */
+}
 
-  .gradient-text {
-    @apply bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent;
-  }
+.card-hover:hover {
+  border-color: rgba(99,102,241,0.2); /* hover:border-indigo-300/50 */
+  box-shadow: 0 10px 15px rgba(79,70,229,0.06); /* hover:shadow-lg */
+}
 
-  .icon-glow {
-    @apply relative after:absolute after:inset-0 after:bg-current after:blur-lg after:opacity-0 after:transition-opacity hover:after:opacity-20;
-  }
+.gradient-text {
+  background-image: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); /* from-indigo-600 to-purple-600 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.icon-glow {
+  position: relative;
+}
+.icon-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  filter: blur(12px); /* blur-lg approx */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.icon-glow:hover::after {
+  opacity: 0.2;
 }
 
 /* Smooth scrollbar */
