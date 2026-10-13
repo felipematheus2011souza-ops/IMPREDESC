@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, TrendingDown, DollarSign, Calculator, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calculator, ArrowUpRight, ArrowDownRight, Target, Award, Sparkles, Send, Plus, Trash2, CheckCircle, X } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
@@ -9,25 +9,20 @@ const StatCard = ({ icon: Icon, label, value, trend, color, gradient }: any) => 
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     whileHover={{ y: -5 }}
-    className={`relative overflow-hidden rounded-2xl border border-white/20 p-6 backdrop-blur-xl group cursor-default`}
+    className={`relative overflow-hidden rounded-3xl border border-white/40 p-6 backdrop-blur-xl group cursor-default shadow-sm`}
     style={{
-      background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
+      background: `linear-gradient(135deg, ${color}12 0%, ${color}04 100%)`,
     }}
   >
-    {/* Gradient Background Effect */}
     <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: gradient }}></div>
-    
-    {/* Animated border glow */}
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-20 blur-xl transition-opacity" style={{ background: gradient }}></div>
-
     <div className="relative z-10 space-y-3">
       <div className="flex items-start justify-between">
         <div className={`p-3 rounded-2xl ${color}20`}>
           <Icon size={24} style={{ color }} className="transition-transform group-hover:scale-110" />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-semibold ${
-            trend > 0 ? 'bg-green-100/50 text-green-700' : 'bg-red-100/50 text-red-700'
+          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold ${
+            trend > 0 ? 'bg-emerald-100/80 text-emerald-800' : 'bg-rose-100/80 text-rose-800'
           }`}>
             {trend > 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
             {Math.abs(trend)}%
@@ -35,17 +30,27 @@ const StatCard = ({ icon: Icon, label, value, trend, color, gradient }: any) => 
         )}
       </div>
       <div>
-        <p className="text-sm font-medium text-slate-600">{label}</p>
-        <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+        <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500">{label}</p>
+        <p className="text-2xl font-black text-slate-900 mt-1">{value}</p>
       </div>
     </div>
   </motion.div>
 );
 
 export default function Dashboard({ setActiveView }: { setActiveView: (v: string) => void }) {
-  const { vendas, setVendas, despesas, produtos, setProdutos } = useAppContext();
+  const { usuario, vendas, setVendas, despesas, produtos, setProdutos, orcamentos, setOrcamentos } = useAppContext();
   const [showVendaModal, setShowVendaModal] = useState(false);
+  const [showOrcamentoModal, setShowOrcamentoModal] = useState(false);
+
   const [vendaForm, setVendaForm] = useState({ produtoId: '', quantidade: 1, data: new Date().toISOString().substring(0, 10) });
+
+  // Quotation form state
+  const [clienteNome, setClienteNome] = useState('');
+  const [clienteTelefone, setClienteTelefone] = useState('');
+  const [dataValidade, setDataValidade] = useState(new Date(Date.now() + 7 * 86400000).toISOString().substring(0, 10));
+  const [observacoes, setObservacoes] = useState('');
+  const [orcamentoItens, setOrcamentoItens] = useState<{ produtoId: string; nomeProduto: string; quantidade: number; precoUnitario: number }[]>([]);
+  const [itemDraft, setItemDraft] = useState({ produtoId: '', quantidade: 1 });
 
   const handleRegistrarVenda = () => {
     const prod = produtos.find(p => p.id === vendaForm.produtoId);
@@ -69,12 +74,71 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
     setVendaForm({ produtoId: '', quantidade: 1, data: new Date().toISOString().substring(0, 10) });
   };
 
+  const addItemToOrcamento = () => {
+    const prod = produtos.find(p => p.id === itemDraft.produtoId);
+    if (!prod) return alert('Selecione um produto.');
+    setOrcamentoItens([...orcamentoItens, {
+      produtoId: prod.id,
+      nomeProduto: prod.nome,
+      quantidade: itemDraft.quantidade,
+      precoUnitario: prod.precoVenda
+    }]);
+    setItemDraft({ produtoId: '', quantidade: 1 });
+  };
+
+  const handleGerarOrcamento = () => {
+    if (!clienteNome || orcamentoItens.length === 0) return alert('Informe o cliente e ao menos 1 item.');
+    const valorTotal = orcamentoItens.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+
+    const novo = {
+      id: crypto.randomUUID(),
+      clienteNome,
+      clienteTelefone,
+      dataValidade,
+      observacoes,
+      itens: orcamentoItens,
+      valorTotal,
+      status: 'enviado' as const,
+      dataCriacao: new Date().toISOString()
+    };
+
+    setOrcamentos([novo, ...orcamentos]);
+
+    // Copy quote text for WhatsApp
+    let textoWhats = `*ORÇAMENTO - ${usuario?.nomeNegocio || 'IMPREDESC'}*\n`;
+    textoWhats += `Cliente: ${clienteNome}\n`;
+    textoWhats += `Validade: ${new Date(dataValidade).toLocaleDateString('pt-BR')}\n\n`;
+    textoWhats += `*Itens:*\n`;
+    orcamentoItens.forEach(item => {
+      textoWhats += `- ${item.quantidade}x ${item.nomeProduto}: R$ ${(item.precoUnitario * item.quantidade).toFixed(2)}\n`;
+    });
+    textoWhats += `\n*TOTAL: R$ ${valorTotal.toFixed(2)}*\n`;
+    if (observacoes) textoWhats += `\nObs: ${observacoes}`;
+
+    try {
+      navigator.clipboard.writeText(textoWhats);
+      alert('Orçamento gerado e texto copiado para a área de transferência! Cole no WhatsApp do cliente.');
+    } catch {
+      alert('Orçamento gerado com sucesso!');
+    }
+
+    setShowOrcamentoModal(false);
+    setClienteNome('');
+    setClienteTelefone('');
+    setObservacoes('');
+    setOrcamentoItens([]);
+  };
+
   const totalReceitas = vendas.reduce((acc, v) => acc + (v.valorVenda * v.quantidade), 0);
   const totalCustoProdutos = vendas.reduce((acc, v) => acc + ((v.custoProduto || 0) * v.quantidade), 0);
   const lucroBrutoProdutos = totalReceitas - totalCustoProdutos;
   
   const totalDespesas = despesas.reduce((acc, d) => acc + d.valor, 0);
   const lucroLiquido = lucroBrutoProdutos - totalDespesas;
+
+  // Monthly Goal Calculation
+  const metaMensal = usuario?.metaFaturamentoMensal || 5000;
+  const progressoMeta = Math.min(100, Math.round((totalReceitas / metaMensal) * 100));
 
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const chartData = meses.map(mes => ({ name: mes, receitas: 0, despesas: 0 }));
@@ -107,14 +171,85 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
     <div className="min-h-screen px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8 pb-12">
         
-        {/* Header */}
+        {/* Header with Welcome Greeting */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="pt-4"
+          className="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Dashboard</h1>
-          <p className="text-slate-500">Acompanhe o desempenho financeiro em tempo real</p>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full flex items-center gap-1">
+                <Sparkles size={12} /> {usuario?.nomeNegocio || 'Painel MEI'}
+              </span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900">
+              Olá, {usuario?.nome || 'Microentreendedor'}! 👋
+            </h1>
+            <p className="text-slate-500 font-medium text-sm mt-1">Acompanhe o desempenho do seu negócio em tempo real.</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowOrcamentoModal(true)}
+              className="px-4 py-3 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 rounded-2xl font-bold text-xs shadow-sm transition-all flex items-center gap-2"
+            >
+              <Send size={16} className="text-indigo-600" />
+              Enviar Orçamento
+            </button>
+            <button
+              onClick={() => setShowVendaModal(true)}
+              className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            >
+              <TrendingUp size={16} />
+              Nova Venda
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Goal Widget Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden"
+        >
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 text-indigo-300 text-xs font-bold uppercase tracking-wider">
+                <Target size={18} className="text-emerald-400" /> Meta de Faturamento Mensal MEI
+              </div>
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-black">R$ {totalReceitas.toFixed(2)}</span>
+                <span className="text-indigo-300 text-sm font-semibold">de R$ {metaMensal.toFixed(2)}</span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-1 pt-1">
+                <div className="w-full h-3 bg-indigo-950/80 rounded-full overflow-hidden p-0.5 border border-indigo-700/50">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressoMeta}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full bg-gradient-to-r from-emerald-400 to-teal-300 rounded-full shadow-md"
+                  />
+                </div>
+                <div className="flex justify-between text-[11px] font-bold text-indigo-300 pt-1">
+                  <span>{progressoMeta}% concluído</span>
+                  <span>Faltam R$ {Math.max(0, metaMensal - totalReceitas).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {progressoMeta >= 100 && (
+              <div className="bg-emerald-500/20 border border-emerald-400/40 p-4 rounded-2xl flex items-center gap-3 backdrop-blur-sm">
+                <Award size={32} className="text-amber-300 shrink-0" />
+                <div>
+                  <p className="font-extrabold text-sm text-emerald-200">Parabéns! Meta Atingida! 🎉</p>
+                  <p className="text-xs text-indigo-200">Seu faturamento superou a meta mensal.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* KPI Cards Grid */}
@@ -160,9 +295,9 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-2 rounded-2xl border border-white/20 p-6 backdrop-blur-xl bg-white/40 hover:border-white/40 transition-all duration-300 shadow-lg"
+            className="lg:col-span-2 rounded-3xl border border-white/40 p-6 backdrop-blur-xl bg-white/70 shadow-sm"
           >
-            <h3 className="text-lg font-bold text-slate-900 mb-6">Desempenho Financeiro</h3>
+            <h3 className="text-base font-extrabold text-slate-900 mb-6 uppercase tracking-wider text-xs">Evolução Mensal</h3>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -176,18 +311,18 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
                       <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(203, 213, 225, 0.1)" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(203, 213, 225, 0.2)" />
                   <XAxis dataKey="name" stroke="#94a3b8" style={{ fontSize: '12px' }} />
                   <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} />
                   <Tooltip 
                     contentStyle={{ 
-                      borderRadius: '12px', 
+                      borderRadius: '16px',
                       border: 'none', 
-                      background: 'rgba(15, 23, 42, 0.9)',
+                      background: 'rgba(15, 23, 42, 0.95)',
                       backdropFilter: 'blur(10px)',
                       color: '#fff'
                     }}
-                    formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                    formatter={(value: any) => `R$ ${Number(value || 0).toFixed(2)}`}
                   />
                   <Area type="monotone" dataKey="receitas" name="Receitas" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorReceita)" />
                   <Area type="monotone" dataKey="despesas" name="Despesas" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorDespesa)" />
@@ -203,15 +338,15 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
             transition={{ delay: 0.2 }}
             className="space-y-3"
           >
-            <h3 className="text-lg font-bold text-slate-900 px-2">Ações Rápidas</h3>
+            <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider px-2">Acesso Rápido</h3>
             
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowVendaModal(true)}
-              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
             >
-              <TrendingUp size={20} />
+              <TrendingUp size={18} />
               Nova Venda
             </motion.button>
 
@@ -219,28 +354,28 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView('precificacao')}
-              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
             >
-              <Calculator size={20} />
-              Precificação
+              <Calculator size={18} />
+              Calculadora de Preço
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView('produtos')}
-              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
             >
-              📦 Produtos
+              📦 Gestão de Estoque
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveView('relatorios')}
-              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
             >
-              📊 Relatórios
+              📊 Relatórios Financeiros
             </motion.button>
           </motion.div>
         </div>
@@ -250,9 +385,9 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-2xl border border-white/20 p-6 backdrop-blur-xl bg-white/40 shadow-lg"
+          className="rounded-3xl border border-white/40 p-6 backdrop-blur-xl bg-white/70 shadow-sm"
         >
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Atividade Recente</h3>
+          <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-6">Últimas Transações</h3>
           <div className="space-y-3">
             {recentTransactions.length > 0 ? (
               recentTransactions.map((tx, idx) => (
@@ -261,28 +396,28 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-white/40 hover:bg-white/60 transition-all duration-300"
+                  className="flex items-center justify-between p-4 rounded-2xl bg-white/60 hover:bg-white transition-all border border-slate-100"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base ${
                       tx.type === 'venda' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-rose-100 text-rose-700'
                     }`}>
                       {tx.type === 'venda' ? '↑' : '↓'}
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">{tx.descricao}</p>
-                      <p className="text-sm text-slate-500">{new Date(tx.data).toLocaleDateString('pt-BR')}</p>
+                      <p className="font-bold text-slate-800 text-sm">{tx.descricao}</p>
+                      <p className="text-xs text-slate-400">{new Date(tx.data).toLocaleDateString('pt-BR')}</p>
                     </div>
                   </div>
-                  <p className={`text-lg font-bold ${tx.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`text-base font-extrabold ${tx.valor > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {tx.valor > 0 ? '+' : ''} R$ {Math.abs(tx.valor).toFixed(2)}
                   </p>
                 </motion.div>
               ))
             ) : (
-              <p className="text-center text-slate-400 py-8">Nenhuma transação ainda</p>
+              <p className="text-center text-slate-400 py-8 text-sm">Nenhuma transação registrada ainda.</p>
             )}
           </div>
         </motion.div>
@@ -290,31 +425,30 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
         {/* Modal Venda */}
         <AnimatePresence>
           {showVendaModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
               <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl"
+                className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-slate-900">Registrar Venda</h2>
-                  <motion.button
-                    whileHover={{ rotate: 90 }}
+                  <h2 className="text-xl font-bold text-slate-900">Registrar Venda</h2>
+                  <button
                     onClick={() => setShowVendaModal(false)}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-slate-100 rounded-xl text-slate-400"
                   >
-                    <X size={24} />
-                  </motion.button>
+                    <X size={20} />
+                  </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 text-sm">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Produto</label>
+                    <label className="block font-bold text-slate-700 mb-1">Produto</label>
                     <select
                       value={vendaForm.produtoId}
                       onChange={(e) => setVendaForm({ ...vendaForm, produtoId: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                     >
                       <option value="">Selecione um produto...</option>
                       {produtos.map(p => (
@@ -324,250 +458,178 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Quantidade</label>
+                    <label className="block font-bold text-slate-700 mb-1">Quantidade</label>
                     <input
                       type="number"
                       min={1}
                       value={vendaForm.quantidade}
                       onChange={(e) => setVendaForm({ ...vendaForm, quantidade: parseInt(e.target.value) || 1 })}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Data</label>
+                    <label className="block font-bold text-slate-700 mb-1">Data</label>
                     <input
                       type="date"
                       value={vendaForm.data}
                       onChange={(e) => setVendaForm({ ...vendaForm, data: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 pt-4">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
+                    <button
+                      type="button"
                       onClick={() => setShowVendaModal(false)}
-                      className="px-4 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                      className="px-4 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
                     >
                       Cancelar
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleRegistrarVenda}
-                      className="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-lg transition-all"
+                      className="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold hover:shadow-lg transition-all"
                     >
-                      Registrar
-                    </motion.button>
+                      Confirmar
+                    </button>
                   </div>
                 </div>
               </motion.div>
             </div>
           )}
         </AnimatePresence>
-      </div>
-    </div>
-  );
-}
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
-      >
-        <div className="bg-indigo-600 p-4 sm:p-5 rounded-2xl shadow-sm text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[10px] font-semibold text-indigo-200 uppercase tracking-widest">Faturamento Bruto</h3>
-              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white hidden sm:flex">
-                <TrendingUp size={16} />
-              </div>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold">R$ {totalReceitas.toFixed(2)}</p>
-          </div>
-        </div>
 
-        <div className="bg-emerald-600 p-4 sm:p-5 rounded-2xl shadow-sm text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[10px] font-semibold text-emerald-200 uppercase tracking-widest">Lucro Bruto</h3>
-              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white hidden sm:flex">
-                <DollarSign size={16} />
-              </div>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold">R$ {lucroBrutoProdutos.toFixed(2)}</p>
-          </div>
-        </div>
-        
-        <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl shadow-sm text-white flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Despesas Totais</h3>
-              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white hidden sm:flex">
-                <TrendingDown size={16} />
-              </div>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold">R$ {totalDespesas.toFixed(2)}</p>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 sm:p-5 rounded-2xl shadow-sm text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[10px] font-semibold text-indigo-100 uppercase tracking-widest">Lucro Líquido</h3>
-              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white hidden sm:flex">
-                <Wallet size={16} />
-              </div>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold">R$ {lucroLiquido.toFixed(2)}</p>
-          </div>
-        </div>
-      </motion.div>
+        {/* Modal Orçamento */}
+        <AnimatePresence>
+          {showOrcamentoModal && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Gerar Orçamento / Cotação</h2>
+                    <p className="text-xs text-slate-500">Envie um orçamento personalizado para seu cliente.</p>
+                  </div>
+                  <button onClick={() => setShowOrcamentoModal(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                    <X size={20} />
+                  </button>
+                </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
-      >
-        <button onClick={() => setActiveView('precificacao')} className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-indigo-300 hover:shadow-md transition-all group">
-          <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-            <Calculator size={20} />
-          </div>
-          <span className="text-xs font-bold text-slate-700">Precificar</span>
-        </button>
-
-        <button onClick={() => setShowVendaModal(true)} className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-emerald-300 hover:shadow-md transition-all group">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-            <TrendingUp size={20} />
-          </div>
-          <span className="text-xs font-bold text-slate-700">Venda</span>
-        </button>
-
-        <button onClick={() => setActiveView('despesas')} className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-rose-300 hover:shadow-md transition-all group">
-          <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors">
-            <Receipt size={20} />
-          </div>
-          <span className="text-xs font-bold text-slate-700">Despesa</span>
-        </button>
-
-        <button onClick={() => setActiveView('relatorios')} className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-2 hover:border-purple-300 hover:shadow-md transition-all group">
-          <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
-            <PieChart size={20} />
-          </div>
-          <span className="text-xs font-bold text-slate-700">Relatórios</span>
-        </button>
-      </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-bold text-slate-800 uppercase text-xs tracking-widest">Tendência de Vendas</h3>
-          </div>
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => `R$ ${(value as number).toFixed(2)}`}
-                />
-                <Area type="monotone" dataKey="receitas" name="Receitas" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorVendas)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col p-5">
-          <h3 className="font-bold text-slate-800 uppercase text-xs tracking-widest mb-4">Atividade Recente</h3>
-          
-          <div className="flex-1 space-y-3 max-h-[200px] overflow-y-auto">
-            {vendas.length === 0 && despesas.length === 0 ? (
-              <p className="text-[10px] text-slate-400 text-center mt-6">Nenhuma atividade registrada.</p>
-            ) : (
-              [...vendas.slice(-3)].reverse().map((v) => (
-                <div key={v.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-2xl">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                      <TrendingUp size={14}/>
+                <div className="space-y-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Nome do Cliente *</label>
+                      <input
+                        type="text"
+                        value={clienteNome}
+                        onChange={e => setClienteNome(e.target.value)}
+                        placeholder="Ex: João Silva"
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                      />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-slate-800 truncate">{v.nomeProduto}</p>
-                      <p className="text-[10px] text-slate-400">{new Date(v.data).toLocaleDateString()}</p>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Telefone / Whats</label>
+                      <input
+                        type="text"
+                        value={clienteTelefone}
+                        onChange={e => setClienteTelefone(e.target.value)}
+                        placeholder="(11) 99999-9999"
+                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                      />
                     </div>
                   </div>
-                  <p className="text-[11px] font-bold text-emerald-600 whitespace-nowrap ml-2">+R$ {(v.valorVenda * v.quantidade).toFixed(2)}</p>
+
+                  {/* Add items */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                    <p className="font-bold text-xs uppercase text-slate-500">Adicionar Produtos ao Orçamento</p>
+                    <div className="flex gap-2">
+                      <select
+                        value={itemDraft.produtoId}
+                        onChange={e => setItemDraft({ ...itemDraft, produtoId: e.target.value })}
+                        className="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl outline-none text-xs font-semibold"
+                      >
+                        <option value="">Selecione um produto...</option>
+                        {produtos.map(p => (
+                          <option key={p.id} value={p.id}>{p.nome} (R$ {p.precoVenda.toFixed(2)})</option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        min="1"
+                        value={itemDraft.quantidade}
+                        onChange={e => setItemDraft({ ...itemDraft, quantidade: Number(e.target.value) })}
+                        className="w-16 p-2.5 bg-white border border-slate-200 rounded-xl outline-none text-xs font-bold text-center"
+                      />
+                      <button
+                        type="button"
+                        onClick={addItemToOrcamento}
+                        className="px-3 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+
+                    {/* Table of quote items */}
+                    {orcamentoItens.length > 0 && (
+                      <div className="space-y-1 pt-2 border-t border-slate-200">
+                        {orcamentoItens.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs p-2 bg-white rounded-lg border border-slate-100">
+                            <span className="font-bold text-slate-800">{item.quantidade}x {item.nomeProduto}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-indigo-600">R$ {(item.precoUnitario * item.quantidade).toFixed(2)}</span>
+                              <button onClick={() => setOrcamentoItens(orcamentoItens.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-600">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="text-right pt-2 font-black text-slate-900 text-sm">
+                          Total: R$ {orcamentoItens.reduce((a, b) => a + (b.precoUnitario * b.quantidade), 0).toFixed(2)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Validade do Orçamento</label>
+                    <input
+                      type="date"
+                      value={dataValidade}
+                      onChange={e => setDataValidade(e.target.value)}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Observações / Condições</label>
+                    <textarea
+                      value={observacoes}
+                      onChange={e => setObservacoes(e.target.value)}
+                      placeholder="Ex: 50% de sinal no pedido e 50% na entrega."
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs"
+                      rows={2}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGerarOrcamento}
+                    className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={18} /> Gerar e Copiar para WhatsApp
+                  </button>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
-
-      {showVendaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-lg">Registrar Nova Venda</h3>
-              <button onClick={() => setShowVendaModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-slate-700 font-bold mb-2 text-sm">Produto / Serviço</label>
-                <select 
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                  value={vendaForm.produtoId}
-                  onChange={(e) => setVendaForm({ ...vendaForm, produtoId: e.target.value })}
-                >
-                  <option value="">Selecione um produto...</option>
-                  {produtos.map(p => (
-                    <option key={p.id} value={p.id}>{p.nome} - R$ {p.precoVenda.toFixed(2)}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-700 font-bold mb-2 text-sm">Quantidade</label>
-                <input 
-                  type="number"
-                  min="1"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                  value={vendaForm.quantidade}
-                  onChange={(e) => setVendaForm({ ...vendaForm, quantidade: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <label className="block text-slate-700 font-bold mb-2 text-sm">Data da Venda</label>
-                <input 
-                  type="date"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                  value={vendaForm.data}
-                  onChange={(e) => setVendaForm({ ...vendaForm, data: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="p-6 bg-slate-50 flex gap-3 justify-end border-t border-slate-100">
-              <button onClick={() => setShowVendaModal(false)} className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors">Cancelar</button>
-              <button onClick={handleRegistrarVenda} className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow-sm hover:bg-emerald-700 transition-colors flex items-center gap-2">
-                <TrendingUp size={18} /> Confirmar
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
     </div>
   );
 }

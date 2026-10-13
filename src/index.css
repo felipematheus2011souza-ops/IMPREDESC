@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --bg-gradient-1: #f8f9fa;
@@ -53,16 +51,13 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Smooth transitions */
-/* Replaced @apply usages with explicit CSS so Tailwind v4 build won't fail on @apply resolution */
 .btn-primary {
-  /* px-6 = 1.5rem, py-2.5 = 0.625rem */
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-  padding-top: 0.75rem; /* slightly larger */
+  padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-  border-radius: 0.75rem; /* more modern radius */
-  font-weight: 700; /* bolder */
+  border-radius: 0.75rem;
+  font-weight: 700;
   transition: all 260ms cubic-bezier(.2,.9,.2,1);
   display: inline-flex;
   align-items: center;
@@ -76,12 +71,12 @@ body {
 .btn-primary:active { transform: translateY(0) scale(0.99); }
 
 .card-base {
-  border-radius: 1rem; /* rounded-2xl */
-  border: 1px solid var(--card-border); /* border-slate-200/50 */
-  background-color: var(--card-bg); /* bg-white/80 */
+  border-radius: 1rem;
+  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
   -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px); /* stronger blur */
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06); /* subtle shadow */
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   transition: transform 300ms ease, box-shadow 300ms ease;
   padding: 1.25rem;
 }
@@ -90,23 +85,6 @@ body {
 .card-hover:hover { border-color: rgba(99,102,241,0.18); box-shadow: 0 18px 40px rgba(99,102,241,0.06); }
 
 .gradient-text { background-image: linear-gradient(90deg, var(--accent-1) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-.icon-glow { position: relative; display: inline-flex; }
-.icon-glow::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  filter: blur(10px);
-  opacity: 0;
-  transition: opacity 220ms ease;
-  pointer-events: none;
-}
-.icon-glow:hover::after { opacity: 0.15; }
-
-/* Small helpers */
-.kpi-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
-.kpi-label { color: var(--muted-1); font-weight: 600; font-size: 0.875rem; }
 
 /* Smooth scrollbar */
 ::-webkit-scrollbar { width: 8px; }
@@ -119,11 +97,3 @@ body {
 
 /* Prevent layout shift on scrollbar */
 html { overflow-y: scroll; }
-
-/* Logo styles */
-.logo-wrap { display: flex; align-items: center; gap: 0.75rem; }
-.logo-mark { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; box-shadow: 0 6px 18px rgba(99,102,241,0.12); transform: translateZ(0); }
-.logo-word { font-weight: 800; font-size: 1.125rem; letter-spacing: -0.02em; }
-
-/* Utility for subtle float */
-.float-subtle { animation: float-up 4s ease-in-out infinite; }

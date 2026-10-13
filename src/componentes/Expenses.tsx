@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { useState } from 'react';
 import { Plus, Trash2, TrendingDown, Wallet, Calendar } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import type { Despesa } from '../types';
