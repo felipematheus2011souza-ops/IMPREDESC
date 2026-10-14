@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, TrendingDown, DollarSign, Calculator, ArrowUpRight, ArrowDownRight, Target, Award, Sparkles, Send, Plus, Trash2, CheckCircle, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calculator, ArrowUpRight, ArrowDownRight, Target, Award, Sparkles, Send, Plus, Trash2, CheckCircle, X, Download } from 'lucide-react';
+import { exportPDFDocument } from '../utils/pdfExport';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
@@ -647,13 +648,40 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
                     />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleGerarOrcamento}
-                    className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle size={18} /> Gerar e Copiar para WhatsApp
-                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const valorTotal = orcamentoItens.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+                        exportPDFDocument({
+                          titulo: 'Orçamento Oficial',
+                          clienteNome,
+                          clienteTelefone,
+                          empresaNome: usuario?.nomeNegocio || 'EMPREDESC MEI',
+                          dataValidade,
+                          observacoes,
+                          valorTotal,
+                          itens: orcamentoItens.map(i => ({
+                            nome: i.nomeProduto,
+                            quantidade: i.quantidade,
+                            valorUnitario: i.precoUnitario,
+                            subtotal: i.precoUnitario * i.quantidade
+                          }))
+                        });
+                      }}
+                      disabled={orcamentoItens.length === 0}
+                      className="py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-xs disabled:opacity-50"
+                    >
+                      <Download size={16} /> Baixar PDF
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGerarOrcamento}
+                      className="py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2 text-xs"
+                    >
+                      <CheckCircle size={16} /> Copiar Whats
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </div>

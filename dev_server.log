@@ -21,3 +21,12 @@
 2:12:48 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
 2:13:53 AM [vite] (client) hmr update /src/componentes/SupportModal.tsx, /src/index.css
 2:14:01 AM [vite] (client) hmr update /src/componentes/SupportModal.tsx, /src/index.css
+2:23:24 AM [vite] (client) page reload index.html
+2:23:32 AM [vite] (client) hmr update /src/index.css
+2:24:20 AM [vite] (client) page reload src/main.tsx
+2:25:33 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:26:10 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
+2:26:43 AM [vite] (client) hmr update /src/componentes/Expenses.tsx, /src/index.css
+2:27:55 AM [vite] (client) ✨ new dependencies optimized: @google/genai, jspdf, jspdf-autotable
+2:27:55 AM [vite] (client) ✨ optimized dependencies changed. reloading
+2:30:27 AM [vite] (client) hmr update /src/App.tsx, /src/index.css

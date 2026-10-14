@@ -11,6 +11,7 @@ import ProfileModal from './componentes/ProfileModal';
 import SettingsModal from './componentes/SettingsModal';
 import SupportModal from './componentes/SupportModal';
 import Preloader from './componentes/Preloader';
+import GoogleStitchAiAdvisor from './componentes/GoogleStitchAiAdvisor';
 import {
   LayoutDashboard,
   Calculator,
@@ -122,7 +123,7 @@ function AppContent() {
               </motion.div>
               
               {/* Desktop Menu Navigation Bar */}
-              <nav className="hidden lg:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/70">
+              <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/70">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeView === item.id;
@@ -486,6 +487,9 @@ function AppContent() {
         isOpen={supportModalOpen}
         onClose={() => setSupportModalOpen(false)}
       />
+
+      {/* Floating Google Stitch AI Assistant */}
+      <GoogleStitchAiAdvisor />
     </div>
   );
 }

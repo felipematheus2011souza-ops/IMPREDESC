@@ -30,38 +30,45 @@ export default function Expenses() {
   const total = totalPago + totalPendente;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Gestão de Despesas</h2>
-        <p className="text-slate-500 text-sm mt-1">Controle seus gastos fixos e variáveis.</p>
+    <div className="max-w-7xl mx-auto space-y-6 pb-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 font-extrabold text-[10px] uppercase tracking-wider rounded-md border border-rose-100">
+              Controle Financeiro MEI
+            </span>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Gestão Inteligente de Despesas</h2>
+          <p className="text-slate-500 text-xs font-medium mt-0.5">Monitore saídas, custos operacionais e faturas a pagar com precisão.</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center">
-            <TrendingDown size={28} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
+            <TrendingDown size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Geral</p>
-            <p className="text-2xl font-bold text-slate-900">R$ {total.toFixed(2)}</p>
+            <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Mês</p>
+            <p className="text-2xl font-black text-slate-900">R$ {total.toFixed(2)}</p>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-rose-200 shadow-sm flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <Wallet size={28} />
+        <div className="bg-white p-5 rounded-3xl border border-rose-100 shadow-2xs hover:shadow-md transition-all flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <Wallet size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold text-rose-400 uppercase tracking-widest">Total Pago</p>
-            <p className="text-2xl font-bold text-rose-700">R$ {totalPago.toFixed(2)}</p>
+            <p className="text-[11px] font-extrabold text-rose-400 uppercase tracking-wider">Liquidado / Pago</p>
+            <p className="text-2xl font-black text-rose-700">R$ {totalPago.toFixed(2)}</p>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-amber-200 shadow-sm flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Calendar size={28} />
+        <div className="bg-white p-5 rounded-3xl border border-amber-100 shadow-2xs hover:shadow-md transition-all flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <Calendar size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">Pendente</p>
-            <p className="text-2xl font-bold text-amber-700">R$ {totalPendente.toFixed(2)}</p>
+            <p className="text-[11px] font-extrabold text-amber-500 uppercase tracking-wider">Pendente de Pagamento</p>
+            <p className="text-2xl font-black text-amber-700">R$ {totalPendente.toFixed(2)}</p>
           </div>
         </div>
       </div>
