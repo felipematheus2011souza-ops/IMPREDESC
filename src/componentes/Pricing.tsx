@@ -228,50 +228,50 @@ export default function Pricing() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto space-y-6 pb-10 px-4 sm:px-6 lg:px-8">
       
       {showTooltip && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 relative flex items-start gap-4 shadow-sm">
-          <button onClick={() => setShowTooltip(false)} className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600">
-            <Info size={20} />
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs relative flex items-start gap-3.5">
+          <button onClick={() => setShowTooltip(false)} className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600">
+            <Info size={18} />
           </button>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 font-bold">
-            <HelpCircle size={24} />
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold border border-indigo-100">
+            <HelpCircle size={20} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-indigo-900 mb-1">Como precificar com precisão no IMPREDESC?</h3>
-            <p className="text-indigo-700 text-sm leading-relaxed mb-3">Para garantir que suas margens de lucro sejam reais, siga os passos abaixo:</p>
-            <ol className="list-decimal list-inside text-xs text-indigo-800 space-y-1 font-semibold">
-              <li>Adicione seus matérias-primas na aba <strong>"2. Meu Estoque de Insumos"</strong>.</li>
-              <li>Monte a receita do produto informando os insumos, seu tempo de preparo e custos de embalagem.</li>
-              <li>Defina sua foto de exibição e salve o produto com o preço sugerido automatizado!</li>
+            <h3 className="text-sm font-extrabold text-slate-900">Como precificar produtos no IMPREDESC</h3>
+            <p className="text-slate-500 text-xs mt-0.5 mb-2">Siga o passo a passo para calcular precos de venda realistas e lucrativos:</p>
+            <ol className="list-decimal list-inside text-xs text-slate-700 space-y-1 font-semibold">
+              <li>Cadastre suas matérias-primas na aba <strong>"Meu Estoque de Insumos"</strong>.</li>
+              <li>Monte o produto selecionando os insumos utilizados, tempo de preparo e embalagens.</li>
+              <li>O sistema sugere o preço de venda exato com base no lucro livre e taxas desejadas.</li>
             </ol>
           </div>
         </motion.div>
       )}
 
-      {/* Navigation tabs */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm max-w-fit mx-auto">
+      {/* Navigation Tabs */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-xs max-w-fit mx-auto">
         <button 
           onClick={() => setActiveTab('precificar')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'precificar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === 'precificar' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
         >
-          <Calculator size={18} />
-          <span>1. Criar / Editar Precificação</span>
+          <Calculator size={16} />
+          <span>Calculadora de Preço</span>
         </button>
         <button 
           onClick={() => setActiveTab('insumos')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'insumos' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === 'insumos' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
         >
-          <Database size={18} />
-          <span>2. Meu Estoque de Insumos</span>
+          <Database size={16} />
+          <span>Meu Estoque de Insumos</span>
         </button>
         <button 
           onClick={() => setActiveTab('salvos')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'salvos' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === 'salvos' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
         >
-          <ShoppingBag size={18} />
-          <span>3. Receitas/Produtos Salvos</span>
+          <ShoppingBag size={16} />
+          <span>Produtos Precificados</span>
         </button>
       </div>
 

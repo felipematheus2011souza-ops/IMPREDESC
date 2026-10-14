@@ -104,40 +104,43 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <div className="bg-emerald-100/80 p-3 rounded-2xl text-emerald-600">
-            <TrendingUp size={24} />
-          </div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Receita Bruta</p>
-            <h3 className="text-xl font-black text-slate-900">R$ {totaisGerais.receitas.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Receita Bruta</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">R$ {totaisGerais.receitas.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <TrendingUp size={20} />
           </div>
         </div>
-        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <div className="bg-rose-100/80 p-3 rounded-2xl text-rose-600">
-            <TrendingDown size={24} />
-          </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Despesas Operacionais</p>
-            <h3 className="text-xl font-black text-slate-900">R$ {totaisGerais.despesas.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Despesas Operacionais</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">R$ {totaisGerais.despesas.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <TrendingDown size={20} />
           </div>
         </div>
-        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <div className="bg-amber-100/80 p-3 rounded-2xl text-amber-600">
-            <Database size={24} />
-          </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Insumos em Estoque</p>
-            <h3 className="text-xl font-black text-slate-900">R$ {valorEstoqueInsumos.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor em Estoque</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">R$ {valorEstoqueInsumos.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <Database size={20} />
           </div>
         </div>
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-5 rounded-3xl shadow-md text-white flex items-start gap-4">
-          <div className="bg-white/20 p-3 rounded-2xl">
-            <DollarSign size={24} />
-          </div>
+
+        <div className="bg-indigo-600 text-white p-5 rounded-2xl shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-1">Lucro Líquido</p>
-            <h3 className="text-xl font-black">R$ {totaisGerais.lucro.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wider">Lucro Líquido</p>
+            <h3 className="text-2xl font-black mt-1">R$ {totaisGerais.lucro.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold">
+            <DollarSign size={20} />
           </div>
         </div>
       </div>
