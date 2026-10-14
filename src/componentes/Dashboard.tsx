@@ -332,48 +332,77 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-3"
+            className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-3.5"
           >
-            <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Acesso Rápido</h3>
-            
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Ações Estratégicas MEI</h3>
+              <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-100">
+                Atalhos PRO
+              </span>
+            </div>
+
             <button
               onClick={() => setShowVendaModal(true)}
-              className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-between"
+              className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-slate-800 hover:to-slate-900 text-white shadow-md shadow-slate-900/10 transition-all duration-200 flex items-center justify-between group border border-slate-800"
             >
-              <span className="flex items-center gap-2">
-                <TrendingUp size={16} className="text-emerald-400" /> Registrar Nova Venda
-              </span>
-              <ArrowUpRight size={16} />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+                  <TrendingUp size={18} />
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-xs text-white group-hover:text-emerald-300 transition-colors">Registrar Venda Direta</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Lançar entrada e atualizar estoque</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
             </button>
 
             <button
               onClick={() => setActiveView('precificacao')}
-              className="w-full py-3 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/60 font-bold text-xs transition-all flex items-center justify-between"
+              className="w-full p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 border border-indigo-200/80 shadow-2xs transition-all duration-200 flex items-center justify-between group"
             >
-              <span className="flex items-center gap-2">
-                <Calculator size={16} className="text-indigo-600" /> Calculadora de Preços
-              </span>
-              <ArrowUpRight size={16} />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                  <Calculator size={18} />
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-xs text-slate-900 group-hover:text-indigo-600 transition-colors">Calculadora de Precificação</p>
+                  <p className="text-[10px] text-slate-500 font-medium">Calcule custo, margem e taxa de cartão</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
             </button>
 
             <button
               onClick={() => setActiveView('produtos')}
-              className="w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between"
+              className="w-full p-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all duration-200 flex items-center justify-between group"
             >
-              <span className="flex items-center gap-2">
-                📦 Gestão de Estoque
-              </span>
-              <ArrowUpRight size={16} />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  📦
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-xs text-slate-900 group-hover:text-slate-700 transition-colors">Controle de Estoque</p>
+                  <p className="text-[10px] text-slate-500 font-medium">Gerenciar produtos e reposição</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
             </button>
 
             <button
               onClick={() => setActiveView('relatorios')}
-              className="w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between"
+              className="w-full p-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all duration-200 flex items-center justify-between group"
             >
-              <span className="flex items-center gap-2">
-                📊 Relatórios MEI
-              </span>
-              <ArrowUpRight size={16} />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
+                  📊
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-xs text-slate-900 group-hover:text-slate-700 transition-colors">Relatório Financeiro MEI</p>
+                  <p className="text-[10px] text-slate-500 font-medium">DASN-SIMEI, lucros e gráficos</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
             </button>
           </motion.div>
         </div>

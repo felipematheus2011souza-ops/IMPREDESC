@@ -90,20 +90,33 @@ function AppContent() {
 
               {/* Company Logo & Brand */}
               <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-3 cursor-pointer group"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 cursor-pointer group select-none"
                 onClick={() => setActiveView('dashboard')}
               >
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm group-hover:bg-indigo-700 transition-colors">
-                  <Sparkles className="w-5 h-5 text-amber-300" />
+                <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-violet-600 text-white shadow-md shadow-indigo-500/20 group-hover:shadow-indigo-500/40 group-hover:scale-105 transition-all duration-300">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" fillOpacity="0.9"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white"></span>
+                  </span>
                 </div>
                 <div>
-                  <h1 className="text-base font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
-                    {usuario?.nomeNegocio ? usuario.nomeNegocio : 'EMPREDESC'}
-                  </h1>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                    <Building size={10} className="text-indigo-500" /> Gestão Inteligente MEI
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-base font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-none">
+                      {usuario?.nomeNegocio ? usuario.nomeNegocio : 'EMPREDESC'}
+                    </h1>
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-extrabold text-[9px] uppercase tracking-wider">
+                      PRO
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 tracking-wide mt-0.5">
+                    <Building size={10} className="text-indigo-500" /> Sistema Empresarial MEI
                   </span>
                 </div>
               </motion.div>

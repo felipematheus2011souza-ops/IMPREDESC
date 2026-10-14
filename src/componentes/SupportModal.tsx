@@ -40,6 +40,8 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
     setEnviado(true);
   };
 
+  const [activeTab, setActiveTab] = useState<'ticket' | 'faq'>('ticket');
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
@@ -47,10 +49,10 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 flex flex-col"
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 relative">
             <button
               onClick={onClose}
               className="absolute top-5 right-5 p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-white"
@@ -58,17 +60,54 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
               <X size={20} />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                <LifeBuoy size={24} />
+              <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
+                <LifeBuoy size={24} className="text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Suporte & Atendimento MEI</h2>
-                <p className="text-indigo-100 text-xs">Fale diretamente com nossa equipe técnica.</p>
+                <h2 className="text-xl font-bold">Central de Ajuda & Suporte MEI</h2>
+                <p className="text-indigo-200 text-xs">Respostas rápidas e suporte prioritário via e-mail.</p>
               </div>
+            </div>
+
+            {/* Sub Nav Tabs */}
+            <div className="flex gap-2 mt-4 pt-2 border-t border-white/10">
+              <button
+                onClick={() => setActiveTab('ticket')}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'ticket' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                }`}
+              >
+                Enviar Mensagem
+              </button>
+              <button
+                onClick={() => setActiveTab('faq')}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'faq' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                }`}
+              >
+                Perguntas Frequentes (FAQ)
+              </button>
             </div>
           </div>
 
-          {enviado ? (
+          {activeTab === 'faq' ? (
+            <div className="p-6 overflow-y-auto space-y-3 text-sm flex-1">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                <p className="font-extrabold text-slate-900 text-xs">Como cadastrar insumos e receitas?</p>
+                <p className="text-slate-600 text-xs">Acesse a aba <strong>Precificação</strong> e navegue até "Meu Estoque de Insumos". Após cadastrar a matéria-prima, volte para "Calculadora de Preço" para montar o produto.</p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                <p className="font-extrabold text-slate-900 text-xs">O que é o limite de faturamento MEI?</p>
+                <p className="text-slate-600 text-xs">O limite do MEI é de R$ 81.000,00 por ano (média de R$ 6.750,00/mês). No Dashboard, a barra de metas ajuda você a monitorar seu teto mensal de vendas.</p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                <p className="font-extrabold text-slate-900 text-xs">Meus dados ficam salvos em nuvem?</p>
+                <p className="text-slate-600 text-xs">Para sua privacidade e velocidade, seus dados ficam salvos em seu próprio navegador. Recomenda-se exportar relatórios periódicos em CSV na aba Relatórios MEI.</p>
+              </div>
+            </div>
+          ) : enviado ? (
             <div className="p-8 text-center space-y-4">
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle size={36} />
@@ -85,7 +124,7 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSendSupport} className="p-6 space-y-4 text-sm">
+            <form onSubmit={handleSendSupport} className="p-6 space-y-4 text-sm overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Empresa / Usuário Solicitante</label>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800">

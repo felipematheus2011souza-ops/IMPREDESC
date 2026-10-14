@@ -6,48 +6,80 @@ export default function Preloader() {
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white"
+      transition={{ duration: 0.4 }}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-white selection:bg-indigo-500 selection:text-white"
     >
-      <motion.div
-        animate={{ scale: [0.9, 1.1, 0.9], rotate: [0, 180, 360] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-2xl mb-6 shadow-indigo-500/50"
-      >
-        <Sparkles size={32} className="text-white" />
-      </motion.div>
-
-      <motion.h1
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="text-3xl font-black bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent"
-      >
-        IMPREDESC
-      </motion.h1>
-
-      <motion.p
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="text-xs text-indigo-300 font-semibold tracking-widest uppercase mt-2"
-      >
-        Carregando Recursos e Dados MEI...
-      </motion.p>
-
-      {/* Loading Bar */}
-      <div className="w-48 h-1.5 bg-indigo-950/80 rounded-full mt-6 overflow-hidden border border-indigo-800/40">
-        <motion.div
-          initial={{ x: '-100%' }}
-          animate={{ x: '100%' }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-full h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full"
-        />
+      {/* Background Ambient Glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
       </div>
 
-      <span className="text-[10px] text-slate-500 font-medium absolute bottom-6">
-        v2.5.0 - empredesc.com.br
-      </span>
+      <div className="relative z-10 flex flex-col items-center max-w-sm px-6 text-center">
+        {/* Animated Enterprise Logo */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="relative mb-6"
+        >
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 p-0.5 shadow-2xl shadow-indigo-500/30">
+            <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center relative overflow-hidden">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 via-transparent to-purple-500/20 opacity-50"
+              />
+              <svg className="w-10 h-10 text-indigo-400 relative z-10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" fillOpacity="0.9"/>
+                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Title */}
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-1"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight text-white">
+              EMPREDESC
+            </h1>
+            <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-extrabold text-[10px] uppercase tracking-wider">
+              PRO
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 font-medium">
+            Sistema de Gestão Empresarial para Microempreendedores
+          </p>
+        </motion.div>
+
+        {/* Loading Bar & Pulse */}
+        <div className="w-56 mt-8 space-y-2">
+          <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden relative">
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: '100%' }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-full h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full"
+            />
+          </div>
+          <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+            <span>Sincronizando banco MEI</span>
+            <span>Seguro • LGPD</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-6 flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+        <Sparkles size={12} className="text-amber-400" />
+        <span>empredesc.com.br • Todos os direitos reservados</span>
+      </div>
     </motion.div>
   );
 }

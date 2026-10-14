@@ -227,26 +227,46 @@ export default function Pricing() {
     return partes.join(' e ');
   };
 
+  // Sub-step inside calculator view to organize layout seamlessly
+  const [calcStep, setCalcStep] = useState<1 | 2 | 3>(1);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-10 px-4 sm:px-6 lg:px-8">
       
+      {/* Top Banner Guide */}
       {showTooltip && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs relative flex items-start gap-3.5">
-          <button onClick={() => setShowTooltip(false)} className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 border border-indigo-800/60 rounded-3xl p-5 shadow-md relative text-white flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 font-bold border border-indigo-500/30">
+              <HelpCircle size={22} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-white">Centro Profissional de Precificação MEI</h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] uppercase">
+                  Fórmula Inteligente
+                </span>
+              </div>
+              <p className="text-indigo-200/80 text-xs mt-1">Organize seus custos em 3 etapas simples para nunca vender no prejuízo:</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 text-xs">
+                <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500 text-white font-black text-[10px] flex items-center justify-center">1</span>
+                  <span>Cadastre seus insumos no estoque</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500 text-white font-black text-[10px] flex items-center justify-center">2</span>
+                  <span>Monte a receita e defina seu tempo</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500 text-white font-black text-[10px] flex items-center justify-center">3</span>
+                  <span>Defina a margem de lucro e simule</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setShowTooltip(false)} className="text-indigo-300 hover:text-white p-1 rounded-lg transition-colors">
             <Info size={18} />
           </button>
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold border border-indigo-100">
-            <HelpCircle size={20} />
-          </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-slate-900">Como precificar produtos no IMPREDESC</h3>
-            <p className="text-slate-500 text-xs mt-0.5 mb-2">Siga o passo a passo para calcular precos de venda realistas e lucrativos:</p>
-            <ol className="list-decimal list-inside text-xs text-slate-700 space-y-1 font-semibold">
-              <li>Cadastre suas matérias-primas na aba <strong>"Meu Estoque de Insumos"</strong>.</li>
-              <li>Monte o produto selecionando os insumos utilizados, tempo de preparo e embalagens.</li>
-              <li>O sistema sugere o preço de venda exato com base no lucro livre e taxas desejadas.</li>
-            </ol>
-          </div>
         </motion.div>
       )}
 
@@ -254,24 +274,24 @@ export default function Pricing() {
       <div className="flex flex-col sm:flex-row items-center justify-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-xs max-w-fit mx-auto">
         <button 
           onClick={() => setActiveTab('precificar')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === 'precificar' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === 'precificar' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
         >
           <Calculator size={16} />
           <span>Calculadora de Preço</span>
         </button>
         <button 
           onClick={() => setActiveTab('insumos')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === 'insumos' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === 'insumos' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
         >
           <Database size={16} />
-          <span>Meu Estoque de Insumos</span>
+          <span>Meu Estoque de Insumos ({insumos.length})</span>
         </button>
         <button 
           onClick={() => setActiveTab('salvos')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${activeTab === 'salvos' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === 'salvos' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
         >
           <ShoppingBag size={16} />
-          <span>Produtos Precificados</span>
+          <span>Produtos Precificados ({receitas.length})</span>
         </button>
       </div>
 

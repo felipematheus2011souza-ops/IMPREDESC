@@ -15,3 +15,9 @@
 1:14:29 AM [vite] (client) hmr update /src/componentes/Products.tsx, /src/index.css
 1:32:58 AM [vite] (client) hmr update /src/componentes/Pricing.tsx, /src/index.css
 1:33:51 AM [vite] (client) hmr update /src/componentes/Reports.tsx, /src/index.css
+2:10:52 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:11:28 AM [vite] (client) hmr update /src/componentes/Preloader.tsx, /src/index.css
+2:12:10 AM [vite] (client) hmr update /src/componentes/Pricing.tsx, /src/index.css
+2:12:48 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
+2:13:53 AM [vite] (client) hmr update /src/componentes/SupportModal.tsx, /src/index.css
+2:14:01 AM [vite] (client) hmr update /src/componentes/SupportModal.tsx, /src/index.css
