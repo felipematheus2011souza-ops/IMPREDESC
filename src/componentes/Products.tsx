@@ -83,41 +83,41 @@ export default function Products() {
   });
 
   return (
-    <div className="min-h-screen px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8 pb-12">
+    <div className="px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header */}
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-4"
+          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900">Estoque & Inventário</h1>
-            <p className="text-slate-500 text-sm font-medium mt-1">Gerencie seus produtos acabados e disponibilidade.</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Estoque & Produtos</h1>
+            <p className="text-slate-500 text-xs sm:text-sm font-medium mt-0.5">Monitore os níveis de estoque e a rentabilidade dos seus itens.</p>
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-2.5">
             <div className="relative w-full sm:w-64">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder="Buscar produto..."
-                className="w-full px-4 py-2.5 pl-10 rounded-2xl bg-white border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <Search className="absolute left-3 top-3 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-2.5 text-slate-400" size={15} />
             </div>
 
-            <div className="flex items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm w-full sm:w-auto">
-              <Filter size={16} className="text-slate-400 ml-2" />
+            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 w-full sm:w-auto">
+              <Filter size={14} className="text-slate-400" />
               <select
                 value={filterStock}
                 onChange={e => setFilterStock(e.target.value as any)}
-                className="bg-transparent text-xs font-bold text-slate-700 outline-none pr-3 py-1.5 cursor-pointer"
+                className="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer"
               >
-                <option value="todos">Todos</option>
+                <option value="todos">Todos os Itens</option>
                 <option value="em_estoque">Em Estoque</option>
                 <option value="esgotado">Esgotados</option>
               </select>
@@ -125,23 +125,23 @@ export default function Products() {
           </div>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Stats Summary Cards */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
-          <div className="rounded-3xl border border-white/40 p-6 backdrop-blur-xl bg-white/60 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Produtos Cadastrados</p>
-            <p className="text-3xl font-black text-slate-900">{produtos.length}</p>
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Produtos Cadastrados</p>
+            <p className="text-2xl font-black text-slate-900 mt-1">{produtos.length}</p>
           </div>
-          <div className="rounded-3xl border border-white/40 p-6 backdrop-blur-xl bg-white/60 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Unidades em Estoque</p>
-            <p className="text-3xl font-black text-emerald-600">{produtos.reduce((acc, p) => acc + p.estoque, 0)}</p>
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Unidades em Estoque</p>
+            <p className="text-2xl font-black text-emerald-600 mt-1">{produtos.reduce((acc, p) => acc + p.estoque, 0)}</p>
           </div>
-          <div className="rounded-3xl border border-white/40 p-6 backdrop-blur-xl bg-white/60 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Produtos Esgotados</p>
-            <p className="text-3xl font-black text-rose-600">{produtos.filter(p => p.estoque === 0).length}</p>
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Produtos Esgotados</p>
+            <p className="text-2xl font-black text-rose-600 mt-1">{produtos.filter(p => p.estoque === 0).length}</p>
           </div>
         </motion.div>
 

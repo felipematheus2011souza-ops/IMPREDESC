@@ -81,60 +81,54 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100 font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white flex flex-col justify-between">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased flex flex-col justify-between selection:bg-indigo-600 selection:text-white">
       <div>
-        {/* Navbar with Glassmorphism */}
-        <nav className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-white/40 shadow-sm">
+        {/* Sleek Modern Header */}
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center justify-between h-16">
 
-              {/* Company Logo & Name */}
+              {/* Company Logo & Brand */}
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3 cursor-pointer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-3 cursor-pointer group"
                 onClick={() => setActiveView('dashboard')}
               >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur-sm opacity-70"></div>
-                  <div className="relative px-3 py-2.5 bg-slate-900 rounded-2xl shadow-md text-white flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-indigo-400" />
-                  </div>
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm group-hover:bg-indigo-700 transition-colors">
+                  <Sparkles className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black tracking-tight bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 bg-clip-text text-transparent">
-                    {usuario?.nomeNegocio ? usuario.nomeNegocio.toUpperCase() : 'IMPREDESC'}
+                  <h1 className="text-base font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
+                    {usuario?.nomeNegocio ? usuario.nomeNegocio : 'EMPREDESC'}
                   </h1>
-                  <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider flex items-center gap-1">
-                    <Building size={10} className="text-indigo-500" /> Platform MEI
-                  </p>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <Building size={10} className="text-indigo-500" /> Gestão Inteligente MEI
+                  </span>
                 </div>
               </motion.div>
               
-              {/* Desktop Menu */}
-              <div className="hidden lg:flex items-center gap-1 bg-slate-100/60 p-1.5 rounded-2xl border border-slate-200/60 backdrop-blur-sm">
-                {navItems.map((item, idx) => {
+              {/* Desktop Menu Navigation Bar */}
+              <nav className="hidden lg:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/70">
+                {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeView === item.id;
                   return (
-                    <motion.button
+                    <button
                       key={item.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
                       onClick={() => { setActiveView(item.id as any); triggerAutoSaveFeedback(); }}
-                      className={`relative group flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-300 ${
+                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-md shadow-indigo-500/20`
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                          ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/60 font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                       }`}
                     >
-                      <Icon size={16} />
+                      <Icon size={15} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
                       <span>{item.label}</span>
-                    </motion.button>
+                    </button>
                   );
                 })}
-              </div>
+              </nav>
 
               {/* Header Right Actions */}
               <div className="hidden md:flex items-center gap-2">
@@ -142,12 +136,12 @@ function AppContent() {
                 <div className="relative">
                   <button
                     onClick={() => setNotificationsOpen(!notificationsOpen)}
-                    className="p-2.5 rounded-2xl bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-600 transition-colors relative shadow-sm"
-                    title="Notificações de Estoque"
+                    className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/80 hover:bg-slate-200/70 text-slate-600 transition-colors relative shadow-2xs"
+                    title="Avisos de Estoque"
                   >
                     <Bell size={18} />
                     {totalNotificacoes > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white rounded-full text-[10px] font-black flex items-center justify-center animate-pulse">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
                         {totalNotificacoes}
                       </span>
                     )}
@@ -157,13 +151,13 @@ function AppContent() {
                   <AnimatePresence>
                     {notificationsOpen && (
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 8 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="absolute right-0 mt-3 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-4 z-50 text-xs space-y-3"
+                        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                        className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4 z-50 text-xs space-y-3"
                       >
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                          <span className="font-extrabold text-slate-800 uppercase tracking-wider text-[10px]">Avisos de Estoque ({totalNotificacoes})</span>
+                          <span className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Alertas de Estoque ({totalNotificacoes})</span>
                           <button onClick={() => setNotificationsOpen(false)} className="text-slate-400 hover:text-slate-600">
                             <X size={14} />
                           </button>
@@ -172,15 +166,15 @@ function AppContent() {
                         <div className="max-h-60 overflow-y-auto space-y-2">
                           {totalNotificacoes === 0 ? (
                             <div className="p-4 text-center text-slate-400 font-medium">
-                              Nenhum alerta de estoque no momento! 🎉
+                              Nenhum alerta de estoque pendente! 🎉
                             </div>
                           ) : (
                             <>
                               {produtosEsgotados.map(p => (
                                 <div key={p.id} className="p-2.5 rounded-xl bg-rose-50 border border-rose-100 flex items-start gap-2 text-rose-900">
-                                  <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                                  <AlertTriangle size={15} className="text-rose-600 shrink-0 mt-0.5" />
                                   <div>
-                                    <p className="font-bold">{p.nome} esgotado!</p>
+                                    <p className="font-bold text-xs">{p.nome} esgotado</p>
                                     <p className="text-[10px] text-rose-700">Reponha no estoque para continuar vendendo.</p>
                                   </div>
                                 </div>
@@ -188,20 +182,20 @@ function AppContent() {
 
                               {produtosPoucoEstoque.map(p => (
                                 <div key={p.id} className="p-2.5 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-2 text-amber-900">
-                                  <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                                  <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
                                   <div>
-                                    <p className="font-bold">{p.nome} está acabando!</p>
-                                    <p className="text-[10px] text-amber-700">Restam apenas {p.estoque} unidades em estoque.</p>
+                                    <p className="font-bold text-xs">{p.nome} está acabando</p>
+                                    <p className="text-[10px] text-amber-700">Restam {p.estoque} unidades no estoque.</p>
                                   </div>
                                 </div>
                               ))}
 
                               {insumosBaixos.map(i => (
                                 <div key={i.id} className="p-2.5 rounded-xl bg-sky-50 border border-sky-100 flex items-start gap-2 text-sky-900">
-                                  <AlertTriangle size={16} className="text-sky-600 shrink-0 mt-0.5" />
+                                  <AlertTriangle size={15} className="text-sky-600 shrink-0 mt-0.5" />
                                   <div>
-                                    <p className="font-bold">Insumo baixo: {i.nome}</p>
-                                    <p className="text-[10px] text-sky-700">Compre mais pacotes no estoque de insumos.</p>
+                                    <p className="font-bold text-xs">Insumo baixo: {i.nome}</p>
+                                    <p className="text-[10px] text-sky-700">Faça reposição de insumos na aba Precificação.</p>
                                   </div>
                                 </div>
                               ))}
@@ -216,7 +210,7 @@ function AppContent() {
                 {/* Support Button */}
                 <button
                   onClick={() => setSupportModalOpen(true)}
-                  className="p-2.5 rounded-2xl bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-600 transition-colors shadow-sm"
+                  className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/80 hover:bg-slate-200/70 text-slate-600 transition-colors shadow-2xs"
                   title="Suporte Técnico"
                 >
                   <LifeBuoy size={18} />
@@ -225,37 +219,37 @@ function AppContent() {
                 {/* Settings Button */}
                 <button
                   onClick={() => setSettingsModalOpen(true)}
-                  className="p-2.5 rounded-2xl bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-600 transition-colors shadow-sm"
+                  className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/80 hover:bg-slate-200/70 text-slate-600 transition-colors shadow-2xs"
                   title="Configurações e Diretrizes"
                 >
                   <Settings size={18} />
                 </button>
 
-                {/* Profile / Account */}
+                {/* Profile / Account Badge */}
                 {usuario ? (
                   <button
                     onClick={() => setProfileModalOpen(true)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-indigo-50/80 hover:bg-indigo-100/80 border border-indigo-200/80 transition-colors text-left shadow-sm"
+                    className="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/80 transition-colors text-left shadow-2xs"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-xs shadow-sm">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs">
                       {usuario.nome ? usuario.nome[0].toUpperCase() : 'M'}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-800 line-clamp-1">{usuario.nome}</p>
-                      <p className="text-[10px] text-indigo-600 font-bold">{usuario.nomeNegocio || 'MEI'}</p>
+                      <p className="text-xs font-bold text-slate-900 leading-tight line-clamp-1">{usuario.nome}</p>
+                      <p className="text-[10px] text-indigo-600 font-semibold">{usuario.nomeNegocio || 'MEI'}</p>
                     </div>
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-1">
                     <button
                       onClick={() => { setAuthModalMode('login'); setAuthModalOpen(true); }}
-                      className="px-3 py-2 text-xs font-bold text-slate-700 hover:text-indigo-600 transition-colors"
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors"
                     >
                       Entrar
                     </button>
                     <button
                       onClick={() => { setAuthModalMode('register'); setAuthModalOpen(true); }}
-                      className="px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
+                      className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5"
                     >
                       <User size={14} /> Criar Conta MEI
                     </button>
@@ -267,7 +261,7 @@ function AppContent() {
               <div className="lg:hidden flex items-center gap-2">
                 <button
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="p-2 bg-white rounded-xl border border-slate-200 text-slate-600 relative"
+                  className="p-2 bg-slate-100 rounded-lg border border-slate-200 text-slate-600 relative"
                 >
                   <Bell size={18} />
                   {totalNotificacoes > 0 && (
@@ -277,66 +271,58 @@ function AppContent() {
                   )}
                 </button>
 
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2.5 hover:bg-slate-100 rounded-xl transition-colors duration-300"
+                  className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
                 >
-                  <motion.div
-                    animate={{ rotate: mobileMenuOpen ? 90 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                  </motion.div>
-                </motion.button>
+                  {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
               </div>
             </div>
 
-            {/* Mobile Nav Menu */}
+            {/* Mobile Navigation Drawer */}
             <AnimatePresence>
               {mobileMenuOpen && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="lg:hidden border-t border-slate-200/50 bg-white/95 backdrop-blur-md"
+                  className="lg:hidden border-t border-slate-200/80 bg-white"
                 >
                   <div className="p-4 space-y-2 text-sm">
                     {navItems.map(item => {
                       const Icon = item.icon;
                       return (
-                        <motion.button
+                        <button
                           key={item.id}
-                          whileHover={{ x: 4 }}
                           onClick={() => {
                             setActiveView(item.id as any);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold transition-all ${
                             activeView === item.id
-                              ? `bg-gradient-to-r ${item.color} text-white shadow-md`
+                              ? 'bg-indigo-600 text-white shadow-xs'
                               : 'text-slate-600 hover:bg-slate-100'
                           }`}
                         >
                           <Icon size={18} />
                           {item.label}
-                        </motion.button>
+                        </button>
                       );
                     })}
 
                     <div className="pt-2 border-t border-slate-200 mt-2 grid grid-cols-2 gap-2">
                       <button
                         onClick={() => { setSettingsModalOpen(true); setMobileMenuOpen(false); }}
-                        className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-100 font-bold text-slate-700 text-xs"
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 font-bold text-slate-700 text-xs"
                       >
-                        <Settings size={16} /> Configurações
+                        <Settings size={15} /> Configurações
                       </button>
                       <button
                         onClick={() => { setSupportModalOpen(true); setMobileMenuOpen(false); }}
-                        className="flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-50 font-bold text-indigo-700 text-xs"
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-indigo-50 font-bold text-indigo-700 text-xs"
                       >
-                        <LifeBuoy size={16} /> Suporte
+                        <LifeBuoy size={15} /> Suporte
                       </button>
                     </div>
 
@@ -344,16 +330,16 @@ function AppContent() {
                       {usuario ? (
                         <button
                           onClick={() => { setProfileModalOpen(true); setMobileMenuOpen(false); }}
-                          className="w-full flex items-center gap-2 p-3 rounded-2xl bg-slate-900 text-white font-bold text-xs"
+                          className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs"
                         >
-                          <User size={16} /> Perfil MEI ({usuario.nome})
+                          <User size={15} /> Perfil MEI ({usuario.nome})
                         </button>
                       ) : (
                         <button
                           onClick={() => { setAuthModalMode('register'); setAuthModalOpen(true); setMobileMenuOpen(false); }}
-                          className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs"
+                          className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs"
                         >
-                          <LogIn size={16} /> Criar Conta
+                          <LogIn size={15} /> Criar Conta
                         </button>
                       )}
                     </div>
@@ -362,7 +348,7 @@ function AppContent() {
               )}
             </AnimatePresence>
           </div>
-        </nav>
+        </header>
 
         {/* Auto-Save Toast Alert */}
         <AnimatePresence>

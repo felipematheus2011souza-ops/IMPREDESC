@@ -9,3 +9,7 @@
   ➜  Network: http://192.168.0.2:3000/
 9:54:51 PM [vite] (client) hmr update /src/index.css
 9:55:01 PM [vite] (client) page reload public/_redirects
+1:13:00 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+1:13:28 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
+1:13:57 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
+1:14:29 AM [vite] (client) hmr update /src/componentes/Products.tsx, /src/index.css
