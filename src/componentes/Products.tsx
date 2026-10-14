@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Box, Trash2, TrendingUp, X, AlertCircle, Package, Search, Filter } from 'lucide-react';
+import { Plus, Box, Trash2, TrendingUp, X, AlertCircle, Package, Search, Filter, Sparkles, Copy, Check } from 'lucide-react';
+import { aiService } from '../utils/aiService';
 import type { ProdutoCadastrado, Venda } from '../types';
 import { useAppContext } from '../context/AppContext';
 
@@ -16,6 +17,23 @@ export default function Products() {
 
   const [vendaForm, setVendaForm] = useState({ quantidade: 1, data: new Date().toISOString().split('T')[0] });
   const [produzirForm, setProduzirForm] = useState({ quantidade: 1, validadeDias: 7 });
+
+  // AI Marketing Copy Modal State
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [copyLoading, setCopyLoading] = useState(false);
+  const [copyText, setCopyText] = useState<string | null>(null);
+  const [copiedText, setCopiedText] = useState(false);
+
+  const handleGenerateCopy = async (p: ProdutoCadastrado) => {
+    setProdutoSelecionado(p);
+    setCopyModalOpen(true);
+    setCopyLoading(true);
+    setCopyText(null);
+
+    const generated = await aiService.generateMarketingCopy(p.nome, p.precoVenda, 'Geral');
+    setCopyText(generated);
+    setCopyLoading(false);
+  };
 
   const calcularValidade = (dias: number) => {
     const d = new Date();
@@ -224,32 +242,41 @@ export default function Products() {
               </div>
               
               {/* Actions */}
-              <div className="p-3 bg-slate-50/80 border-t border-slate-100 flex gap-2">
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setProdutoSelecionado(p); setShowVendaModal(true); }}
-                  disabled={p.estoque === 0}
-                  className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-xl hover:shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              <div className="p-3 bg-slate-50/80 border-t border-slate-100 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { setProdutoSelecionado(p); setShowVendaModal(true); }}
+                    disabled={p.estoque === 0}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-xl hover:shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <TrendingUp size={14} /> Vender
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { setProdutoSelecionado(p); setShowProduzirModal(true); }}
+                    className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <Plus size={14} /> Repor
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => excluirProduto(p.id)}
+                    className="p-2.5 bg-white border border-rose-200 text-slate-400 rounded-xl hover:text-rose-600 hover:bg-rose-50 transition-colors shadow-sm"
+                  >
+                    <Trash2 size={14} />
+                  </motion.button>
+                </div>
+
+                <button
+                  onClick={() => handleGenerateCopy(p)}
+                  className="w-full py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-bold text-[11px] rounded-xl transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <TrendingUp size={14} /> Vender
-                </motion.button>
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setProdutoSelecionado(p); setShowProduzirModal(true); }}
-                  className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  <Plus size={14} /> Repor
-                </motion.button>
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => excluirProduto(p.id)}
-                  className="p-2.5 bg-white border border-rose-200 text-slate-400 rounded-xl hover:text-rose-600 hover:bg-rose-50 transition-colors shadow-sm"
-                >
-                  <Trash2 size={14} />
-                </motion.button>
+                  <Sparkles size={13} className="text-purple-600" /> Gerar Copy de Vendas IA
+                </button>
               </div>
             </motion.div>
           ))}
@@ -401,6 +428,53 @@ export default function Products() {
                     Adicionar
                   </motion.button>
                 </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Modal de Copy de Vendas por IA */}
+        <AnimatePresence>
+          {copyModalOpen && produtoSelecionado && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                      <Sparkles size={18} />
+                    </div>
+                    <h3 className="font-extrabold text-slate-900 text-sm">Copy de Vendas IA: {produtoSelecionado.nome}</h3>
+                  </div>
+                  <button onClick={() => setCopyModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {copyLoading ? (
+                  <div className="p-8 text-center space-y-3">
+                    <Sparkles size={28} className="mx-auto text-purple-600 animate-spin" />
+                    <p className="text-xs font-bold text-slate-700">Llama AI escrevendo a legenda persuasiva...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="space-y-3 text-xs leading-relaxed text-slate-800 bg-purple-50/50 p-4 rounded-2xl border border-purple-100 font-medium whitespace-pre-wrap">
+                      {copyText}
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (copyText) {
+                          navigator.clipboard.writeText(copyText);
+                          setCopiedText(true);
+                          setTimeout(() => setCopiedText(false), 2000);
+                        }
+                      }}
+                      className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      {copiedText ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                      {copiedText ? 'Texto Copiado com Sucesso!' : 'Copiar Legenda para o WhatsApp/Instagram'}
+                    </button>
+                  </div>
+                )}
               </motion.div>
             </div>
           )}

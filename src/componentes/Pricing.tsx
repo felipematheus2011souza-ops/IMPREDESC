@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Calculator, Plus, Save, Info, Image as ImageIcon, Database, ShoppingBag, Clock, Tag, PackageOpen, HelpCircle, Edit, Trash2 } from 'lucide-react';
+import { Calculator, Plus, Save, Info, Image as ImageIcon, Database, ShoppingBag, Clock, Tag, PackageOpen, HelpCircle, Edit, Trash2, Sparkles, X } from 'lucide-react';
+import { aiService } from '../utils/aiService';
 import type { Insumo, ReceitaPrecificada, InsumoUsado, ProdutoCadastrado } from '../types';
 import { useAppContext } from '../context/AppContext';
 
@@ -227,8 +228,30 @@ export default function Pricing() {
     return partes.join(' e ');
   };
 
-  // Sub-step inside calculator view to organize layout seamlessly
-  const [calcStep, setCalcStep] = useState<1 | 2 | 3>(1);
+  // AI Pricing Modal State
+  const [aiAnalysisModalOpen, setAiAnalysisModalOpen] = useState(false);
+  const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  const [aiAnalysisText, setAiAnalysisText] = useState<string | null>(null);
+
+  const triggerAiPricingAnalysis = async () => {
+    if (!precificacao.nome) {
+      alert('Preencha o nome do produto para acionar a análise de IA.');
+      return;
+    }
+    setAiAnalysisModalOpen(true);
+    setAiAnalysisLoading(true);
+    setAiAnalysisText(null);
+
+    const insight = await aiService.generatePricingInsights({
+      nome: precificacao.nome,
+      custoTotal: subtotal,
+      categoria: precificacao.categoriaMercado,
+      rendimento: rendimento
+    });
+
+    setAiAnalysisText(insight);
+    setAiAnalysisLoading(false);
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-10 px-4 sm:px-6 lg:px-8">
@@ -686,9 +709,18 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <button onClick={salvarProduto} className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 hover:shadow-emerald-900/80 hover:-translate-y-1">
-                <Save size={24} /> {receitaEmEdicaoId ? 'Atualizar Produto' : 'Salvar Produto e Deduzir Estoque'}
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={triggerAiPricingAnalysis}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white rounded-xl font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-purple-400/30"
+                >
+                  <Sparkles size={16} className="text-amber-300 animate-pulse" /> Recomendar Preço por IA
+                </button>
+
+                <button onClick={salvarProduto} className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 hover:shadow-emerald-900/80 hover:-translate-y-1">
+                  <Save size={24} /> {receitaEmEdicaoId ? 'Atualizar Produto' : 'Salvar Produto e Deduzir Estoque'}
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -747,6 +779,39 @@ export default function Pricing() {
             </table>
           </div>
         </motion.div>
+      )}
+      {/* Modal de Análise de Precificação por IA */}
+      {aiAnalysisModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  <Sparkles size={18} />
+                </div>
+                <h3 className="font-extrabold text-slate-900 text-sm">Análise de Preço por IA</h3>
+              </div>
+              <button onClick={() => setAiAnalysisModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            {aiAnalysisLoading ? (
+              <div className="p-8 text-center space-y-3">
+                <Sparkles size={28} className="mx-auto text-purple-600 animate-spin" />
+                <p className="text-xs font-bold text-slate-700">O Llama AI está calculando as melhores margens para {precificacao.nome}...</p>
+              </div>
+            ) : (
+              <div className="space-y-3 text-xs leading-relaxed text-slate-800 bg-purple-50/50 p-4 rounded-2xl border border-purple-100 font-medium whitespace-pre-wrap">
+                {aiAnalysisText}
+              </div>
+            )}
+
+            <button onClick={() => setAiAnalysisModalOpen(false)} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800">
+              Entendido
+            </button>
+          </motion.div>
+        </div>
       )}
     </div>
   );

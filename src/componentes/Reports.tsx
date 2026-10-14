@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Download, TrendingUp, TrendingDown, Database, DollarSign, FileText, Search, Filter } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, Database, DollarSign, FileText, Search, Filter, Sparkles, RefreshCw } from 'lucide-react';
+import { aiService } from '../utils/aiService';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
@@ -72,6 +73,26 @@ export default function Reports() {
     (r.categoriaMercado && r.categoriaMercado.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // AI Diagnostic State
+  const [aiDiagnosticLoading, setAiDiagnosticLoading] = useState(false);
+  const [aiDiagnosticText, setAiDiagnosticText] = useState<string | null>(null);
+
+  const handleRunAiDiagnostic = async () => {
+    setAiDiagnosticLoading(true);
+    setAiDiagnosticText(null);
+
+    const diagnostic = await aiService.generateFinancialHealthDiagnostic({
+      faturamentoTotal: totaisGerais.receitas,
+      despesasTotais: totaisGerais.despesas,
+      lucroLiquido: totaisGerais.lucro,
+      quantidadeProdutos: receitas.length,
+      quantidadeVendas: vendas.length
+    });
+
+    setAiDiagnosticText(diagnostic);
+    setAiDiagnosticLoading(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-8 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
@@ -101,6 +122,36 @@ export default function Reports() {
             Exportar CSV
           </button>
         </div>
+      </div>
+
+      {/* AI Financial Health Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl text-white space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center font-bold">
+              <Sparkles size={20} className="text-amber-300" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white">Diagnóstico de Saúde Financeira por IA Llama</h3>
+              <p className="text-indigo-200 text-xs font-semibold">Análise executiva de margens, despesas e recomendações operacionais.</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleRunAiDiagnostic}
+            disabled={aiDiagnosticLoading}
+            className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-xs hover:shadow-lg transition-all flex items-center gap-2 border border-indigo-400/30 disabled:opacity-50"
+          >
+            {aiDiagnosticLoading ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+            {aiDiagnosticLoading ? 'Analisando...' : 'Gerar Diagnóstico Executivo'}
+          </button>
+        </div>
+
+        {aiDiagnosticText && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs leading-relaxed text-indigo-100 font-medium whitespace-pre-wrap">
+            {aiDiagnosticText}
+          </motion.div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
