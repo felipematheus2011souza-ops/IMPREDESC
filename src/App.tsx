@@ -11,7 +11,7 @@ import ProfileModal from './componentes/ProfileModal';
 import SettingsModal from './componentes/SettingsModal';
 import SupportModal from './componentes/SupportModal';
 import Preloader from './componentes/Preloader';
-import GoogleStitchAiAdvisor from './componentes/GoogleStitchAiAdvisor';
+import LlamaAiAdvisor from './componentes/LlamaAiAdvisor';
 import {
   LayoutDashboard,
   Calculator,
@@ -488,8 +488,8 @@ function AppContent() {
         onClose={() => setSupportModalOpen(false)}
       />
 
-      {/* Floating Google Stitch AI Assistant */}
-      <GoogleStitchAiAdvisor />
+      {/* Floating Llama AI Assistant */}
+      <LlamaAiAdvisor />
     </div>
   );
 }

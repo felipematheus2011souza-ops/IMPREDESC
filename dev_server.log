@@ -30,3 +30,5 @@
 2:27:55 AM [vite] (client) ✨ new dependencies optimized: @google/genai, jspdf, jspdf-autotable
 2:27:55 AM [vite] (client) ✨ optimized dependencies changed. reloading
 2:30:27 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+2:34:16 AM [vite] (client) hmr update /src/componentes/GoogleStitchAiAdvisor.tsx, /src/index.css
+2:34:35 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
