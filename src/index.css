@@ -34,6 +34,61 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
 }
 
+/* Apple-Style Liquid Glass & Refinement Utilities */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05),
+              inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.liquid-glass-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+.apple-button {
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+
+.apple-button:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 12px 28px -8px rgba(79, 70, 229, 0.25);
+}
+
+.apple-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.apple-pill {
+  border-radius: 9999px;
+  padding: 0.375rem 1rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Shimmer animation effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
 /* Google Stitch Glass & Glow Elements */
 .stitch-glass {
   background: rgba(255, 255, 255, 0.85);

@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, DollarSign, Calculator, ArrowUpRight, ArrowDo
 import { exportPDFDocument } from '../utils/pdfExport';
 import CasesSection from './CasesSection';
 import FAQSection from './FAQSection';
+import BreakEvenCalculatorModal from './BreakEvenCalculatorModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
@@ -38,6 +39,7 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
   const { usuario, vendas, setVendas, despesas, produtos, setProdutos, orcamentos, setOrcamentos } = useAppContext();
   const [showVendaModal, setShowVendaModal] = useState(false);
   const [showOrcamentoModal, setShowOrcamentoModal] = useState(false);
+  const [showBreakEvenModal, setShowBreakEvenModal] = useState(false);
 
   const [vendaForm, setVendaForm] = useState({ produtoId: '', quantidade: 1, data: new Date().toISOString().substring(0, 10) });
 
@@ -377,6 +379,22 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
             </button>
 
             <button
+              onClick={() => setShowBreakEvenModal(true)}
+              className="w-full p-3.5 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200 shadow-2xs transition-all duration-200 flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-200/60 text-emerald-800 flex items-center justify-center font-bold">
+                  <Target size={18} />
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-xs text-emerald-950 group-hover:text-emerald-700 transition-colors">Simulador de Ponto de Equilíbrio</p>
+                  <p className="text-[10px] text-emerald-800 font-medium">Calcular vendas necessárias para a meta</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-emerald-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            </button>
+
+            <button
               onClick={() => setActiveView('produtos')}
               className="w-full p-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all duration-200 flex items-center justify-between group"
             >
@@ -539,6 +557,12 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
             </div>
           )}
         </AnimatePresence>
+
+        {/* Modal Break-Even Simulator */}
+        <BreakEvenCalculatorModal
+          isOpen={showBreakEvenModal}
+          onClose={() => setShowBreakEvenModal(false)}
+        />
 
         {/* Modal Orçamento */}
         <AnimatePresence>

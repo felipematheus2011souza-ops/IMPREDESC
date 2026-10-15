@@ -100,24 +100,26 @@ Responda em português com conselhos práticos, objetivos e motivadores sobre ve
 
   return (
     <>
-      {/* Floating Trigger */}
+      {/* Floating Trigger with Apple Liquid Glass styling */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 pr-4 rounded-full shadow-2xl shadow-slate-900/40 border border-slate-700/60 flex items-center gap-2.5 cursor-pointer select-none group"
-        title="Assistente Llama 3 AI"
+        className="fixed bottom-6 right-6 z-40 liquid-glass-dark text-white p-3 pr-4 rounded-full shadow-2xl flex items-center gap-2.5 cursor-pointer select-none group border border-white/20"
+        title="Assistente Llama 3 AI Liquid Glass"
       >
-        <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-400/40">
-          <Bot size={20} className="text-indigo-300 group-hover:rotate-12 transition-transform" />
-          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+        <div className="relative flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-md">
+          <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center">
+            <Bot size={18} className="text-amber-300 group-hover:rotate-12 transition-transform" />
+          </div>
+          <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
           </span>
         </div>
         <div className="text-left hidden sm:block">
           <p className="text-xs font-black leading-none text-white">Llama 3 AI</p>
-          <p className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider mt-0.5">Consultor Gratuito</p>
+          <p className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider mt-0.5">Liquid Glass Hub</p>
         </div>
       </motion.button>
 
@@ -131,26 +133,28 @@ Responda em português com conselhos práticos, objetivos e motivadores sobre ve
               exit={{ opacity: 0, y: 30, scale: 0.95 }}
               className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md border border-slate-100 overflow-hidden flex flex-col h-[85vh] sm:h-[620px]"
             >
-              {/* Header */}
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 relative flex items-center justify-between border-b border-slate-800">
+              {/* Liquid Glass Dark Header */}
+              <div className="liquid-glass-dark text-white p-5 relative flex items-center justify-between border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300">
-                    🦙
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5 shadow-md">
+                    <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-bold text-indigo-300 text-lg">
+                      🦙
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h2 className="text-base font-black text-white">Llama 3 AI</h2>
-                      <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-extrabold text-[9px] uppercase border border-indigo-500/30">
-                        Llama API
+                      <h2 className="text-base font-black text-white">Llama 3 AI Hub</h2>
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 font-extrabold text-[9px] uppercase border border-indigo-400/40">
+                        Apple Glass UI
                       </span>
                     </div>
-                    <p className="text-slate-400 text-[11px] font-semibold">Inteligência Aberta e Gratuita para MEI</p>
+                    <p className="text-slate-300 text-[11px] font-semibold">Consultor Estratégico Inteligente para MEI</p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-slate-400 hover:text-white rounded-xl bg-white/10 transition-colors"
+                  className="p-2 text-slate-300 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                 >
                   <X size={18} />
                 </button>

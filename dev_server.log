@@ -41,3 +41,6 @@
 5:53:41 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
 5:54:25 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
 6:14:13 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
+6:19:58 AM [vite] (client) hmr update /src/index.css
+6:20:40 AM [vite] (client) hmr update /src/componentes/LlamaAiAdvisor.tsx, /src/index.css
+6:22:00 AM [vite] (client) hmr update /src/componentes/Dashboard.tsx, /src/index.css
