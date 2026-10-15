@@ -249,12 +249,6 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
           </div>
         </motion.div>
 
-        {/* Cases Section */}
-        <CasesSection />
-
-        {/* FAQ Section */}
-        <FAQSection />
-
         {/* Stat Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
@@ -461,6 +455,12 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
             )}
           </div>
         </motion.div>
+
+        {/* Cases Section (At the bottom of the page) */}
+        <CasesSection />
+
+        {/* FAQ Section (At the bottom of the page) */}
+        <FAQSection />
 
         {/* Modal Venda */}
         <AnimatePresence>
