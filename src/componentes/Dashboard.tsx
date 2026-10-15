@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, TrendingDown, DollarSign, Calculator, ArrowUpRight, ArrowDownRight, Target, Award, Sparkles, Send, Plus, Trash2, CheckCircle, X, Download } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calculator, ArrowUpRight, ArrowDownRight, Target, Award, Sparkles, Send, Plus, Trash2, CheckCircle, X, Download, Share2 } from 'lucide-react';
 import { exportPDFDocument } from '../utils/pdfExport';
+import CasesSection from './CasesSection';
+import FAQSection from './FAQSection';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
@@ -246,6 +248,12 @@ export default function Dashboard({ setActiveView }: { setActiveView: (v: string
             )}
           </div>
         </motion.div>
+
+        {/* Cases Section */}
+        <CasesSection />
+
+        {/* FAQ Section */}
+        <FAQSection />
 
         {/* Stat Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

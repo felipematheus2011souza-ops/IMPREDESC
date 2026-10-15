@@ -12,6 +12,9 @@ import SettingsModal from './componentes/SettingsModal';
 import SupportModal from './componentes/SupportModal';
 import Preloader from './componentes/Preloader';
 import LlamaAiAdvisor from './componentes/LlamaAiAdvisor';
+import PrivacyPolicy from './componentes/PrivacyPolicy';
+import NotFound from './componentes/NotFound';
+import ThankYouModal from './componentes/ThankYouModal';
 import {
   LayoutDashboard,
   Calculator,
@@ -28,12 +31,15 @@ import {
   Settings,
   LifeBuoy,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  ChevronRight,
+  ShieldCheck,
+  Award
 } from 'lucide-react';
 
 function AppContent() {
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'dashboard' | 'precificacao' | 'despesas' | 'produtos' | 'relatorios'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'precificacao' | 'despesas' | 'produtos' | 'relatorios' | 'privacidade' | '404'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -43,19 +49,37 @@ function AppContent() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [thankYouOpen, setThankYouOpen] = useState(false);
 
   // Auto-save toast feedback
   const [autoSaveNotice, setAutoSaveNotice] = useState<string | null>(null);
 
   const { usuario, produtos, insumos } = useAppContext();
 
-  // Initial Preloader simulation to prevent UI lag on startup
+  // Initial Preloader simulation & Dynamic Meta Title Updates
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
     }, 900);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const titleMap: Record<string, { title: string; desc: string }> = {
+      dashboard: { title: 'Dashboard • EMPREDESC PRO', desc: 'Painel de controle financeiro para microentreendedores.' },
+      precificacao: { title: 'Calculadora de Precificação • EMPREDESC PRO', desc: 'Precificação exata por insumo, margem de lucro e taxas de cartão.' },
+      produtos: { title: 'Estoque & Produtos • EMPREDESC PRO', desc: 'Gerenciamento de estoque, reposições e catálogo de vendas.' },
+      despesas: { title: 'Gestão de Despesas • EMPREDESC PRO', desc: 'Controle de custos fixos e variáveis para MEI.' },
+      relatorios: { title: 'Relatórios MEI & DRE • EMPREDESC PRO', desc: 'Relatório financeiro, DRE e controle de limite DASN-SIMEI.' },
+      privacidade: { title: 'Política de Privacidade & LGPD • EMPREDESC PRO', desc: 'Termos de privacidade e proteção de dados do microentreendedor.' },
+      '404': { title: 'Página Não Encontrada (404) • EMPREDESC PRO', desc: 'Recurso não localizado.' }
+    };
+
+    const current = titleMap[activeView] || titleMap.dashboard;
+    document.title = current.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', current.desc);
+  }, [activeView]);
 
   // Low stock calculation for notification bell
   const produtosEsgotados = produtos.filter(p => p.estoque === 0);
@@ -379,9 +403,54 @@ function AppContent() {
           )}
         </AnimatePresence>
 
+        {/* Breadcrumb Navigation Bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <nav className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-white/60 p-2.5 rounded-xl border border-slate-200/60 shadow-2xs backdrop-blur-sm">
+            <button onClick={() => setActiveView('dashboard')} className="hover:text-indigo-600 transition-colors flex items-center gap-1">
+              Início
+            </button>
+            <ChevronRight size={12} className="text-slate-300" />
+            <span className="text-slate-900 font-bold capitalize">
+              {activeView === 'precificacao' ? 'Calculadora de Precificação' :
+               activeView === 'produtos' ? 'Estoque & Produtos' :
+               activeView === 'despesas' ? 'Gestão de Despesas' :
+               activeView === 'relatorios' ? 'Relatórios MEI & DRE' :
+               activeView === 'privacidade' ? 'Política de Privacidade' :
+               activeView === '404' ? 'Página 404' : 'Dashboard'}
+            </span>
+
+            {/* Promise badge */}
+            <div className="ml-auto hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-bold">
+              <ShieldCheck size={12} /> Promessa de Suporte em até 2h úteis
+            </div>
+          </nav>
+        </div>
+
         {/* Main Content View Switcher */}
-        <div className="pt-6 pb-12">
+        <div className="pt-4 pb-12">
           <AnimatePresence mode="wait">
+            {activeView === 'privacidade' && (
+              <motion.div
+                key="privacidade"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <PrivacyPolicy onBack={() => setActiveView('dashboard')} />
+              </motion.div>
+            )}
+            {activeView === '404' && (
+              <motion.div
+                key="404"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <NotFound onGoHome={() => setActiveView('dashboard')} />
+              </motion.div>
+            )}
             {activeView === 'dashboard' && (
               <motion.div
                 key="dashboard"
@@ -454,16 +523,20 @@ function AppContent() {
           </div>
 
           <div className="flex items-center gap-4 text-[11px] font-semibold">
+            <button onClick={() => setActiveView('privacidade')} className="hover:text-white transition-colors">
+              Política de Privacidade
+            </button>
+            <span>•</span>
             <button onClick={() => setSettingsModalOpen(true)} className="hover:text-white transition-colors">
-              Diretrizes & Termos
+              Diretrizes
             </button>
             <span>•</span>
             <button onClick={() => setSupportModalOpen(true)} className="hover:text-white transition-colors">
-              Suporte
+              Suporte (Até 2h)
             </button>
             <span>•</span>
             <span className="px-2.5 py-1 bg-white/10 rounded-full text-indigo-300 font-extrabold">
-              v2.5.0 MEI
+              v3.0.0 PRO
             </span>
           </div>
         </div>
@@ -486,6 +559,10 @@ function AppContent() {
       <SupportModal
         isOpen={supportModalOpen}
         onClose={() => setSupportModalOpen(false)}
+      />
+      <ThankYouModal
+        isOpen={thankYouOpen}
+        onClose={() => setThankYouOpen(false)}
       />
 
       {/* Floating Llama AI Assistant */}
