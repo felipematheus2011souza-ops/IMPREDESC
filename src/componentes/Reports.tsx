@@ -1,11 +1,14 @@
-import React, { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Download, TrendingUp, TrendingDown, Database, DollarSign, FileText } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, Database, DollarSign, FileText, Search, Filter, Sparkles, RefreshCw } from 'lucide-react';
+import { aiService } from '../utils/aiService';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
 export default function Reports() {
-  const { vendas, despesas, insumos, receitas } = useAppContext();
+  const { usuario, vendas, despesas, insumos, receitas } = useAppContext();
+  const [filterPeriod, setFilterPeriod] = useState<'ano' | 'mes_atual'>('ano');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const reportData = useMemo(() => {
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -31,19 +34,8 @@ export default function Reports() {
     });
 
     const mesAtual = new Date().getMonth();
-    return data.slice(0, mesAtual + 1);
-  }, [vendas, despesas]);
-
-  const topProdutos = useMemo(() => {
-    const counts: Record<string, { nome: string, qtd: number, receita: number, lucro: number }> = {};
-    vendas.forEach(v => {
-      if (!counts[v.produtoId]) counts[v.produtoId] = { nome: v.nomeProduto, qtd: 0, receita: 0, lucro: 0 };
-      counts[v.produtoId].qtd += v.quantidade;
-      counts[v.produtoId].receita += (v.valorVenda * v.quantidade);
-      counts[v.produtoId].lucro += (v.lucroLiquido || ((v.valorVenda - (v.custoProduto || 0)) * v.quantidade));
-    });
-    return Object.values(counts).sort((a, b) => b.qtd - a.qtd).slice(0, 5);
-  }, [vendas]);
+    return filterPeriod === 'mes_atual' ? [data[mesAtual]] : data.slice(0, mesAtual + 1);
+  }, [vendas, despesas, filterPeriod]);
 
   const totaisGerais = reportData.reduce((acc, curr) => {
     acc.receitas += curr.receitas;
@@ -54,63 +46,159 @@ export default function Reports() {
 
   const valorEstoqueInsumos = insumos.reduce((acc, i) => acc + (i.precoPorPacote / (i.tamanhoPacote || 1)) * i.estoqueTotal, 0);
 
+  // CSV Export functionality
+  const handleExportCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += `Relatorio Financeiro MEI - ${usuario?.nomeNegocio || 'IMPREDESC'}\n`;
+    csvContent += `Data Exportacao: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+    csvContent += "Mes,Receitas (R$),Despesas (R$),Lucro (R$)\n";
+
+    reportData.forEach(row => {
+      csvContent += `${row.mes},${row.receitas.toFixed(2)},${row.despesas.toFixed(2)},${row.lucro.toFixed(2)}\n`;
+    });
+
+    csvContent += `\nTotal,${totaisGerais.receitas.toFixed(2)},${totaisGerais.despesas.toFixed(2)},${totaisGerais.lucro.toFixed(2)}\n`;
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `relatorio_financial_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const receitasFiltradas = receitas.filter(r =>
+    r.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (r.categoriaMercado && r.categoriaMercado.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // AI Diagnostic State
+  const [aiDiagnosticLoading, setAiDiagnosticLoading] = useState(false);
+  const [aiDiagnosticText, setAiDiagnosticText] = useState<string | null>(null);
+
+  const handleRunAiDiagnostic = async () => {
+    setAiDiagnosticLoading(true);
+    setAiDiagnosticText(null);
+
+    const diagnostic = await aiService.generateFinancialHealthDiagnostic({
+      faturamentoTotal: totaisGerais.receitas,
+      despesasTotais: totaisGerais.despesas,
+      lucroLiquido: totaisGerais.lucro,
+      quantidadeProdutos: receitas.length,
+      quantidadeVendas: vendas.length
+    });
+
+    setAiDiagnosticText(diagnostic);
+    setAiDiagnosticLoading(false);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-6 pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Relatórios</h1>
-          <p className="text-slate-500 mt-1 text-sm font-medium">Análise financeira de seus dados.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Relatórios & DRE MEI</h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">Análise detalhada do seu faturamento, custos e lucratividade.</p>
         </div>
-        <button 
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-sm"
-        >
-          <Download size={18} />
-          Exportar
-        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+            <Filter size={16} className="text-slate-400 ml-2" />
+            <select
+              value={filterPeriod}
+              onChange={e => setFilterPeriod(e.target.value as any)}
+              className="bg-transparent text-xs font-bold text-slate-700 outline-none pr-3 py-1.5 cursor-pointer"
+            >
+              <option value="ano">Ano Inteiro</option>
+              <option value="mes_atual">Mês Atual</option>
+            </select>
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-xs hover:shadow-lg transition-all shadow-md"
+          >
+            <Download size={16} />
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      {/* AI Financial Health Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl text-white space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center font-bold">
+              <Sparkles size={20} className="text-amber-300" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white">Diagnóstico de Saúde Financeira por IA Llama</h3>
+              <p className="text-indigo-200 text-xs font-semibold">Análise executiva de margens, despesas e recomendações operacionais.</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleRunAiDiagnostic}
+            disabled={aiDiagnosticLoading}
+            className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-xs hover:shadow-lg transition-all flex items-center gap-2 border border-indigo-400/30 disabled:opacity-50"
+          >
+            {aiDiagnosticLoading ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+            {aiDiagnosticLoading ? 'Analisando...' : 'Gerar Diagnóstico Executivo'}
+          </button>
+        </div>
+
+        {aiDiagnosticText && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs leading-relaxed text-indigo-100 font-medium whitespace-pre-wrap">
+            {aiDiagnosticText}
+          </motion.div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600">
-            <TrendingUp size={24} />
-          </div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase mb-1">Receitas</p>
-            <h3 className="text-xl font-black text-slate-900">R$ {totaisGerais.receitas.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Receita Bruta</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">R$ {totaisGerais.receitas.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <TrendingUp size={20} />
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <div className="bg-rose-100 p-3 rounded-xl text-rose-600">
-            <TrendingDown size={24} />
-          </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase mb-1">Despesas</p>
-            <h3 className="text-xl font-black text-slate-900">R$ {totaisGerais.despesas.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Despesas Operacionais</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">R$ {totaisGerais.despesas.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <TrendingDown size={20} />
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
-          <div className="bg-amber-100 p-3 rounded-xl text-amber-600">
-            <Database size={24} />
-          </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-500 uppercase mb-1">Em Estoque</p>
-            <h3 className="text-xl font-black text-slate-900">R$ {valorEstoqueInsumos.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor em Estoque</p>
+            <h3 className="text-2xl font-black text-slate-900 mt-1">R$ {valorEstoqueInsumos.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <Database size={20} />
           </div>
         </div>
-        <div className="bg-indigo-600 p-5 rounded-2xl shadow-md text-white flex items-start gap-4">
-          <div className="bg-white/20 p-3 rounded-xl">
-            <DollarSign size={24} />
-          </div>
+
+        <div className="bg-indigo-600 text-white p-5 rounded-2xl shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-indigo-200 uppercase mb-1">Lucro Líquido</p>
-            <h3 className="text-xl font-black">R$ {totaisGerais.lucro.toFixed(2)}</h3>
+            <p className="text-xs font-semibold text-indigo-100 uppercase tracking-wider">Lucro Líquido</p>
+            <h3 className="text-2xl font-black mt-1">R$ {totaisGerais.lucro.toFixed(2)}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold">
+            <DollarSign size={20} />
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-6">Desempenho Financeiro</h3>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider mb-6">Comparativo Receitas x Despesas</h3>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={reportData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -128,8 +216,8 @@ export default function Reports() {
                 <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  formatter={(value: any) => `R$ ${Number(value || 0).toFixed(2)}`}
                 />
                 <Area type="monotone" dataKey="receitas" name="Receitas" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorReceita)" />
                 <Area type="monotone" dataKey="despesas" name="Despesas" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorDespesa)" />
@@ -138,8 +226,8 @@ export default function Reports() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-6">Lucro por Mês</h3>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider mb-6">Resultado Mensal (Lucro)</h3>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={reportData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -148,108 +236,91 @@ export default function Reports() {
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
                 <Tooltip 
                   cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  formatter={(value: any) => `R$ ${Number(value || 0).toFixed(2)}`}
                 />
-                <Bar dataKey="lucro" name="Lucro" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="lucro" name="Lucro Líquido" fill="#6366f1" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-         <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-           <h3 className="text-lg font-bold text-slate-900">Documentos para Exportação</h3>
-           <p className="text-sm text-slate-500">Gere relatórios formatados.</p>
-         </div>
-         <div className="p-0">
-           <div className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-900">Resumo Financeiro</h4>
-                <p className="text-xs text-slate-500">Receitas, despesas e lucros.</p>
-              </div>
-            </div>
-            <button className="px-4 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-lg text-sm hover:bg-indigo-100">
-              Gerar
-            </button>
-          </div>
-         </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Produtos Mais Vendidos</h3>
-            <p className="text-sm text-slate-500">Itens com maior receita.</p>
+            <h3 className="text-lg font-bold text-slate-900">Análise de Margens por Produto</h3>
+            <p className="text-xs text-slate-500 font-medium">Margens de lucro de cada produto calculado.</p>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Buscar produto ou categoria..."
+              className="w-full px-4 py-2 pl-9 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <Search className="absolute left-3 top-2.5 text-slate-400" size={14} />
           </div>
         </div>
-        <div className="p-0 overflow-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-xs font-bold text-slate-400 uppercase bg-white border-b border-slate-100">
-                <th className="p-5">Produto</th>
-                <th className="p-5 text-right">Qtd.</th>
-                <th className="p-5 text-right">Receita</th>
-                <th className="p-5 text-right">Lucro</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {topProdutos.map((p, idx) => (
-                <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50">
-                  <td className="p-5 font-bold text-slate-800">{p.nome}</td>
-                  <td className="p-5 text-right text-slate-600">{p.qtd}</td>
-                  <td className="p-5 text-right font-bold text-indigo-600">R$ {p.receita.toFixed(2)}</td>
-                  <td className="p-5 text-right text-emerald-600 font-bold">R$ {p.lucro.toFixed(2)}</td>
-                </tr>
-              ))}
-              {topProdutos.length === 0 && (
-                <tr><td colSpan={4} className="p-10 text-center text-slate-400">Sem dados.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-          <h3 className="text-lg font-bold text-slate-900">Análise por Produto</h3>
-          <p className="text-sm text-slate-500">Custo, preço e margem de cada produto.</p>
-        </div>
         <div className="p-0 overflow-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-xs font-bold text-slate-400 uppercase bg-white border-b border-slate-100">
+              <tr className="text-xs font-extrabold text-slate-400 uppercase bg-white border-b border-slate-100">
                 <th className="p-5">Produto</th>
-                <th className="p-5 text-right">Custo</th>
-                <th className="p-5 text-right">Venda</th>
-                <th className="p-5 text-right">Lucro</th>
-                <th className="p-5 text-right">Margem</th>
+                <th className="p-5">Categoria</th>
+                <th className="p-5 text-right">Custo Unit.</th>
+                <th className="p-5 text-right">Preço Venda</th>
+                <th className="p-5 text-right">Lucro Unit.</th>
+                <th className="p-5 text-right">Margem %</th>
               </tr>
             </thead>
-            <tbody className="text-sm">
-              {receitas.map(r => {
+            <tbody className="text-sm font-medium">
+              {receitasFiltradas.map(r => {
                 const lucro = r.precoSugeridoUnitario - r.custoTotalUnitario;
                 const margem = r.precoSugeridoUnitario > 0 ? (lucro / r.precoSugeridoUnitario) * 100 : 0;
                 return (
-                  <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                  <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                     <td className="p-5 font-bold text-slate-800">{r.nome}</td>
-                    <td className="p-5 text-right text-rose-600">R$ {r.custoTotalUnitario.toFixed(2)}</td>
-                    <td className="p-5 text-right font-bold">R$ {r.precoSugeridoUnitario.toFixed(2)}</td>
+                    <td className="p-5 text-slate-500 text-xs">{r.categoriaMercado || 'Geral'}</td>
+                    <td className="p-5 text-right text-rose-600 font-semibold">R$ {r.custoTotalUnitario.toFixed(2)}</td>
+                    <td className="p-5 text-right font-bold text-slate-900">R$ {r.precoSugeridoUnitario.toFixed(2)}</td>
                     <td className="p-5 text-right text-emerald-600 font-bold">R$ {lucro.toFixed(2)}</td>
-                    <td className="p-5 text-right font-bold text-indigo-600">{margem.toFixed(1)}%</td>
+                    <td className="p-5 text-right font-extrabold text-indigo-600">{margem.toFixed(1)}%</td>
                   </tr>
                 );
               })}
-              {receitas.length === 0 && (
-                <tr><td colSpan={5} className="p-10 text-center text-slate-400">Sem dados.</td></tr>
+              {receitasFiltradas.length === 0 && (
+                <tr><td colSpan={6} className="p-10 text-center text-slate-400 text-xs font-semibold">Nenhuma receita ou produto cadastrado.</td></tr>
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+          <h3 className="text-lg font-bold text-slate-900">Relatório Consolidado MEI</h3>
+          <p className="text-xs text-slate-500">Documentação formatada para acompanhamento mensal do microentreendedor.</p>
+        </div>
+        <div className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
+              <FileText size={24} />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Resumo Anual de Faturamento Bruto MEI</h4>
+              <p className="text-xs text-slate-500">Exportação em formato CSV compatível com planilhas e contabilidade.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2.5 bg-indigo-50 text-indigo-700 font-bold rounded-xl text-xs hover:bg-indigo-100 transition-colors"
+          >
+            Baixar Relatório
+          </button>
         </div>
       </div>
     </div>

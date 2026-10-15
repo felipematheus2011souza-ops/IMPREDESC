@@ -1,3 +1,16 @@
+export interface UsuarioMicroempreendedor {
+  id: string;
+  nome: string;
+  email: string;
+  nomeNegocio: string;
+  segmento: string;
+  cnpjCpf?: string;
+  telefone?: string;
+  metaFaturamentoMensal: number;
+  fotoUrl?: string;
+  dataCadastro: string;
+}
+
 export interface Insumo {
   id: string;
   nome: string;
@@ -34,7 +47,6 @@ export interface ReceitaPrecificada {
   custoTotalUnitario: number;
   precoSugerido: number;
   precoSugeridoUnitario: number;
-  // novo: ajuste porcentual aplicado ao salvar (ex: -10, 0, +25)
   priceAdjustmentPercent?: number;
   dataCriacao: string;
 }
@@ -75,4 +87,21 @@ export interface Despesa {
   valor: number;
   data: string;
   status: 'pago' | 'pendente';
+}
+
+export interface Orcamento {
+  id: string;
+  clienteNome: string;
+  clienteTelefone?: string;
+  dataValidade: string;
+  observacoes?: string;
+  itens: {
+    produtoId?: string;
+    nomeProduto: string;
+    quantidade: number;
+    precoUnitario: number;
+  }[];
+  valorTotal: number;
+  status: 'rascunho' | 'enviado' | 'aprovado' | 'recusado';
+  dataCriacao: string;
 }

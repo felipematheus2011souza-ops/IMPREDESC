@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Calculator, Plus, Save, Info, Image as ImageIcon, Database, ShoppingBag, Clock, Tag, ChevronRight, PackageOpen, HelpCircle, Edit, Trash2 } from 'lucide-react';
+import { Calculator, Plus, Save, Info, Image as ImageIcon, Database, ShoppingBag, Clock, Tag, PackageOpen, HelpCircle, Edit, Trash2, Sparkles, X } from 'lucide-react';
+import { aiService } from '../utils/aiService';
 import type { Insumo, ReceitaPrecificada, InsumoUsado, ProdutoCadastrado } from '../types';
 import { useAppContext } from '../context/AppContext';
 
@@ -14,6 +15,9 @@ export default function Pricing() {
   const [novoInsumo, setNovoInsumo] = useState<Partial<Insumo>>({
     nome: '', precoPorPacote: 0, quantidadePacotes: 1, tamanhoPacote: 0, unidadeMedida: 'g'
   });
+
+  // Estado para edição de receita/produto precificado
+  const [receitaEmEdicaoId, setReceitaEmEdicaoId] = useState<string | null>(null);
 
   // Estado para nova precificação
   const [precificacao, setPrecificacao] = useState({
@@ -68,6 +72,27 @@ export default function Pricing() {
 
   const removerInsumoDaReceita = (index: number) => {
     setInsumosSelecionados(insumosSelecionados.filter((_, idx) => idx !== index));
+  };
+
+  const carregarReceitaParaEdicao = (r: ReceitaPrecificada) => {
+    setReceitaEmEdicaoId(r.id);
+    setPrecificacao({
+      nome: r.nome,
+      categoriaMercado: r.categoriaMercado || 'Confeitaria',
+      tempoProducaoMinutos: r.tempoProducaoMinutos || 0,
+      valorHoraTrabalho: r.valorHoraTrabalho || 25,
+      custosFixosPercentual: r.custosFixosPercentual || 10,
+      lucroDesejadoPercentual: r.lucroDesejadoPercentual || 30,
+      impostosPercentual: r.impostosPercentual || 5,
+      taxaCartaoPercentual: r.taxaCartaoPercentual || 0,
+      outrosCustos: r.outrosCustos || 0,
+      metodoPrecificacao: r.metodoPrecificacao || 'margem',
+      custoEmbalagem: r.custoEmbalagem || 0,
+      imagemUrl: r.imagemUrl || '',
+      rendimento: r.rendimento || 1
+    });
+    setInsumosSelecionados(r.insumosUsados || []);
+    setActiveTab('precificar');
   };
 
   // Cálculos dinâmicos
@@ -133,30 +158,44 @@ export default function Pricing() {
     });
     setInsumos(novoEstoque);
     
-    const novaReceita: ReceitaPrecificada = {
-      ...precificacao,
-      id: crypto.randomUUID(),
-      insumosUsados: insumosSelecionados,
-      custoTotal: subtotal,
-      custoTotalUnitario: custoTotalUnitario,
-      precoSugerido: precoSugerido,
-      precoSugeridoUnitario: precoSugeridoUnitario,
-      dataCriacao: new Date().toISOString()
-    } as ReceitaPrecificada;
+    if (receitaEmEdicaoId) {
+      // Atualizar existente
+      setReceitas(receitas.map(r => r.id === receitaEmEdicaoId ? {
+        ...r,
+        ...precificacao,
+        insumosUsados: insumosSelecionados,
+        custoTotal: subtotal,
+        custoTotalUnitario: custoTotalUnitario,
+        precoSugerido: precoSugerido,
+        precoSugeridoUnitario: precoSugeridoUnitario,
+      } : r));
+      setReceitaEmEdicaoId(null);
+    } else {
+      const novaReceita: ReceitaPrecificada = {
+        ...precificacao,
+        id: crypto.randomUUID(),
+        insumosUsados: insumosSelecionados,
+        custoTotal: subtotal,
+        custoTotalUnitario: custoTotalUnitario,
+        precoSugerido: precoSugerido,
+        precoSugeridoUnitario: precoSugeridoUnitario,
+        dataCriacao: new Date().toISOString()
+      } as ReceitaPrecificada;
 
-    setReceitas([novaReceita, ...receitas]);
+      setReceitas([novaReceita, ...receitas]);
 
-    const novoProduto: ProdutoCadastrado = {
-      id: crypto.randomUUID(),
-      nome: novaReceita.nome,
-      descricao: 'Criado a partir da precificação',
-      unidadeMedida: 'un',
-      custo: novaReceita.custoTotalUnitario,
-      precoVenda: novaReceita.precoSugeridoUnitario,
-      estoque: novaReceita.rendimento
-    };
+      const novoProduto: ProdutoCadastrado = {
+        id: crypto.randomUUID(),
+        nome: novaReceita.nome,
+        descricao: 'Criado a partir da precificação',
+        unidadeMedida: 'un',
+        custo: novaReceita.custoTotalUnitario,
+        precoVenda: novaReceita.precoSugeridoUnitario,
+        estoque: novaReceita.rendimento
+      };
 
-    setProdutos([novoProduto, ...produtos]);
+      setProdutos([novoProduto, ...produtos]);
+    }
 
     // Resetar formulário
     setPrecificacao({
@@ -189,51 +228,93 @@ export default function Pricing() {
     return partes.join(' e ');
   };
 
+  // AI Pricing Modal State
+  const [aiAnalysisModalOpen, setAiAnalysisModalOpen] = useState(false);
+  const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  const [aiAnalysisText, setAiAnalysisText] = useState<string | null>(null);
+
+  const triggerAiPricingAnalysis = async () => {
+    if (!precificacao.nome) {
+      alert('Preencha o nome do produto para acionar a análise de IA.');
+      return;
+    }
+    setAiAnalysisModalOpen(true);
+    setAiAnalysisLoading(true);
+    setAiAnalysisText(null);
+
+    const insight = await aiService.generatePricingInsights({
+      nome: precificacao.nome,
+      custoTotal: subtotal,
+      categoria: precificacao.categoriaMercado,
+      rendimento: rendimento
+    });
+
+    setAiAnalysisText(insight);
+    setAiAnalysisLoading(false);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10">
+    <div className="max-w-7xl mx-auto space-y-6 pb-10 px-4 sm:px-6 lg:px-8">
       
+      {/* Top Banner Guide */}
       {showTooltip && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 relative flex items-start gap-4">
-          <button onClick={() => setShowTooltip(false)} className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600">
-            <Info size={20} />
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 border border-indigo-800/60 rounded-3xl p-5 shadow-md relative text-white flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 font-bold border border-indigo-500/30">
+              <HelpCircle size={22} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-white">Centro Profissional de Precificação MEI</h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] uppercase">
+                  Fórmula Inteligente
+                </span>
+              </div>
+              <p className="text-indigo-200/80 text-xs mt-1">Organize seus custos em 3 etapas simples para nunca vender no prejuízo:</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 text-xs">
+                <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500 text-white font-black text-[10px] flex items-center justify-center">1</span>
+                  <span>Cadastre seus insumos no estoque</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500 text-white font-black text-[10px] flex items-center justify-center">2</span>
+                  <span>Monte a receita e defina seu tempo</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-2.5 rounded-xl flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-500 text-white font-black text-[10px] flex items-center justify-center">3</span>
+                  <span>Defina a margem de lucro e simule</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setShowTooltip(false)} className="text-indigo-300 hover:text-white p-1 rounded-lg transition-colors">
+            <Info size={18} />
           </button>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-            <HelpCircle size={24} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-indigo-900 mb-1">Como começar a precificar?</h3>
-            <p className="text-indigo-700 text-sm leading-relaxed mb-4">Para criar sua primeira precificação corretamente, você precisará cadastrar os ingredientes (insumos) que usa. Siga este passo a passo:</p>
-            <ol className="list-decimal list-inside text-sm text-indigo-800 space-y-1">
-              <li>Clique na aba <strong>"2. Meu Estoque de Insumos"</strong> e adicione as matérias-primas que você comprou (ex: Farinha, 1kg por R$5,00).</li>
-              <li>Volte para a aba <strong>"1. Criar Precificação"</strong>.</li>
-              <li>Monte sua receita selecionando os insumos cadastrados e adicionando seu tempo e custos!</li>
-            </ol>
-          </div>
         </motion.div>
       )}
 
-      {/* Abas Superiores Super Intuitivas */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm max-w-fit mx-auto">
+      {/* Navigation Tabs */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-xs max-w-fit mx-auto">
         <button 
           onClick={() => setActiveTab('precificar')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'precificar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === 'precificar' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
         >
-          <Calculator size={20} />
-          <span>1. Criar Precificação</span>
+          <Calculator size={16} />
+          <span>Calculadora de Preço</span>
         </button>
         <button 
           onClick={() => setActiveTab('insumos')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'insumos' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === 'insumos' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
         >
-          <Database size={20} />
-          <span>2. Meu Estoque de Insumos</span>
+          <Database size={16} />
+          <span>Meu Estoque de Insumos ({insumos.length})</span>
         </button>
         <button 
           onClick={() => setActiveTab('salvos')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'salvos' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeTab === 'salvos' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
         >
-          <ShoppingBag size={20} />
-          <span>3. Receitas/Produtos Salvos</span>
+          <ShoppingBag size={16} />
+          <span>Produtos Precificados ({receitas.length})</span>
         </button>
       </div>
 
@@ -254,22 +335,22 @@ export default function Pricing() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Preço por Pacote/Unid. (R$)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Preço por Pacote (R$)</label>
                   <input type="number" step="0.01" value={novoInsumo.precoPorPacote || ''} onChange={e => setNovoInsumo({...novoInsumo, precoPorPacote: Number(e.target.value)})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: 5.50" />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Qtd. de Pacotes Comprados</label>
+                  <label className="block text-slate-700 font-bold mb-1">Qtd. de Pacotes</label>
                   <input type="number" value={novoInsumo.quantidadePacotes || ''} onChange={e => setNovoInsumo({...novoInsumo, quantidadePacotes: Number(e.target.value)})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: 14" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Tamanho de 1 Pacote</label>
+                  <label className="block text-slate-700 font-bold mb-1">Tamanho Pacote</label>
                   <input type="number" value={novoInsumo.tamanhoPacote || ''} onChange={e => setNovoInsumo({...novoInsumo, tamanhoPacote: Number(e.target.value)})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ex: 1000" />
                 </div>
                 <div>
                   <label className="block text-slate-700 font-bold mb-1">Medida</label>
-                  <select value={novoInsumo.unidadeMedida} onChange={e => setNovoInsumo({...novoInsumo, unidadeMedida: e.target.value as any})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <select value={novoInsumo.unidadeMedida} onChange={e => setNovoInsumo({...novoInsumo, unidadeMedida: e.target.value as any})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
                     <option value="g">Gramas (g)</option>
                     <option value="kg">Quilos (kg)</option>
                     <option value="ml">Mililitros (ml)</option>
@@ -313,7 +394,7 @@ export default function Pricing() {
                       </td>
                       <td className="p-5 text-rose-600 font-bold">R$ {i.precoPorPacote.toFixed(2)}</td>
                       <td className="p-5 text-slate-500 font-medium bg-slate-50/30">
-                        <span className="text-slate-900">R$ {(i.precoPorPacote / i.tamanhoPacote).toFixed(4)}</span> / {i.unidadeMedida}
+                        <span className="text-slate-900">R$ {(i.precoPorPacote / (i.tamanhoPacote || 1)).toFixed(4)}</span> / {i.unidadeMedida}
                       </td>
                       <td className="p-5 text-right flex items-center justify-end gap-2">
                         <button onClick={() => iniciarEdicaoInsumo(i)} className="p-2 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 rounded-lg transition-colors">
@@ -345,22 +426,37 @@ export default function Pricing() {
           {/* Lado Esquerdo: Formulários (Passo a Passo) */}
           <div className="xl:col-span-7 space-y-6">
             
-            {/* Passo 1: Info Básica */}
+            {/* Passo 1: Info Básica & Photo Upload URL */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative">
               <div className="absolute -left-3 -top-3 w-8 h-8 bg-indigo-600 text-white font-bold rounded-full flex items-center justify-center shadow-md border-4 border-[#f8fafc]">1</div>
-              <h3 className="font-bold text-slate-900 text-lg mb-6 flex items-center gap-2"><ShoppingBag size={20} className="text-indigo-500"/> O que você vai vender?</h3>
+              <h3 className="font-bold text-slate-900 text-lg mb-6 flex items-center gap-2">
+                <ShoppingBag size={20} className="text-indigo-500"/> O que você vai vender?
+                {receitaEmEdicaoId && <span className="text-xs bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full ml-auto">Modo Edição</span>}
+              </h3>
               <div className="flex flex-col sm:flex-row gap-6 items-start">
-                <div className="w-24 h-24 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors shrink-0">
-                  <ImageIcon size={28} className="mb-1 text-slate-300" />
-                  <span className="text-[10px] font-bold uppercase">Foto</span>
+                <div className="w-28 h-28 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 cursor-pointer overflow-hidden shrink-0 relative group">
+                  {precificacao.imagemUrl ? (
+                    <img src={precificacao.imagemUrl} alt="Produto" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <ImageIcon size={28} className="mb-1 text-slate-300" />
+                      <span className="text-[10px] font-bold uppercase text-slate-400">URL Imagem</span>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1 space-y-4 w-full">
                   <div>
                     <input type="text" value={precificacao.nome} onChange={e => setPrecificacao({...precificacao, nome: e.target.value})} className="w-full p-0 bg-transparent border-b-2 border-slate-200 focus:border-indigo-600 outline-none text-2xl font-bold text-slate-900 pb-2 transition-colors placeholder:text-slate-300" placeholder="Nome do Produto (Ex: Bolo de Pote)" />
                   </div>
+
+                  <div>
+                    <label className="block text-slate-500 text-xs font-bold uppercase mb-1">URL da Foto do Produto (Opcional)</label>
+                    <input type="url" value={precificacao.imagemUrl} onChange={e => setPrecificacao({...precificacao, imagemUrl: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none" placeholder="https://exemplo.com/foto.jpg" />
+                  </div>
+
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-slate-500 text-xs font-bold uppercase mb-2">Categoria de Mercado</label>
+                      <label className="block text-slate-500 text-xs font-bold uppercase mb-1">Categoria de Mercado</label>
                       <select value={precificacao.categoriaMercado} onChange={e => setPrecificacao({...precificacao, categoriaMercado: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-semibold text-slate-700">
                         <option value="Confeitaria">Confeitaria & Doces</option>
                         <option value="Artesanato">Artesanato & Costura</option>
@@ -369,7 +465,7 @@ export default function Pricing() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-slate-500 text-xs font-bold uppercase mb-2">Rendimento (Qtd. Produzida)</label>
+                      <label className="block text-slate-500 text-xs font-bold uppercase mb-1">Rendimento (Lote)</label>
                       <input type="number" min="1" value={precificacao.rendimento || 1} onChange={e => setPrecificacao({...precificacao, rendimento: Math.max(1, Number(e.target.value))})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-semibold text-slate-700" placeholder="Ex: 10" />
                     </div>
                   </div>
@@ -432,7 +528,7 @@ export default function Pricing() {
                         const insumo = insumos.find(i => i.id === item.insumoId);
                         if (!insumo) return null;
                         const multiplicador = item.modoUso === 'unitario' ? rendimento : 1;
-                        const custo = (insumo.precoPorPacote / insumo.tamanhoPacote) * item.quantidadeUsada * multiplicador;
+                        const custo = (insumo.precoPorPacote / (insumo.tamanhoPacote || 1)) * item.quantidadeUsada * multiplicador;
                         return (
                           <tr key={idx} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
                             <td className="p-4 text-slate-900 font-bold">{insumo.nome}</td>
@@ -495,8 +591,8 @@ export default function Pricing() {
                   </div>
                   <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
                     {precificacao.metodoPrecificacao === 'margem' 
-                      ? 'O lucro será uma porcentagem do preço final de venda. (Cálculo mais seguro para garantir a margem real).' 
-                      : 'O lucro é calculado diretamente sobre o custo, multiplicando-o. (Forma tradicional de precificar).'}
+                      ? 'O lucro será uma porcentagem do preço final de venda.'
+                      : 'O lucro é calculado diretamente sobre o custo.'}
                   </p>
                 </div>
                 <div>
@@ -603,14 +699,6 @@ export default function Pricing() {
                     {pctFixosEImpostos > 0 && <div style={{ width: `${pctFixosEImpostos}%` }} className="bg-rose-500" title={`Taxas e Fixos: ${pctFixosEImpostos.toFixed(1)}%`}></div>}
                     {pctLucro > 0 && <div style={{ width: `${pctLucro}%` }} className="bg-emerald-500" title={`Lucro Livre: ${pctLucro.toFixed(1)}%`}></div>}
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[10px] font-bold text-slate-400">
-                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500"></div> Insumos ({pctInsumos.toFixed(0)}%)</div>
-                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Mão de Obra ({pctMaoDeObra.toFixed(0)}%)</div>
-                    {pctEmbalagem > 0 && <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-400"></div> Embalagem ({pctEmbalagem.toFixed(0)}%)</div>}
-                    {pctOutrosCustos > 0 && <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-500"></div> Outros ({pctOutrosCustos.toFixed(0)}%)</div>}
-                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Taxas/Fixos ({pctFixosEImpostos.toFixed(0)}%)</div>
-                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Lucro ({pctLucro.toFixed(0)}%)</div>
-                  </div>
                 </div>
               )}
 
@@ -618,21 +706,21 @@ export default function Pricing() {
                 <div className="relative z-10">
                   <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-2">Preço Sugerido {rendimento > 1 ? 'p/ Unidade' : 'p/ Venda'}</p>
                   <p className="text-5xl font-black tracking-tight">R$ {precoSugeridoUnitario.toFixed(2)}</p>
-                  
-                  {rendimento > 1 && (
-                    <p className="text-indigo-200 text-xs font-medium mt-3 bg-indigo-900/30 py-1.5 px-3 rounded-full inline-block">
-                      Preço do Lote Inteiro: R$ {precoSugerido.toFixed(2)}
-                    </p>
-                  )}
                 </div>
-                {/* Decorative circles */}
-                <div className="absolute -right-8 -top-8 w-32 h-32 bg-white rounded-full opacity-10"></div>
-                <div className="absolute -left-4 -bottom-4 w-16 h-16 bg-black rounded-full opacity-10"></div>
               </div>
 
-              <button onClick={salvarProduto} className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 hover:shadow-emerald-900/80 hover:-translate-y-1">
-                <Save size={24} /> Salvar Produto e Deduzir Estoque
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={triggerAiPricingAnalysis}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white rounded-xl font-bold text-xs hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-purple-400/30"
+                >
+                  <Sparkles size={16} className="text-amber-300 animate-pulse" /> Recomendar Preço por IA
+                </button>
+
+                <button onClick={salvarProduto} className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 hover:shadow-emerald-900/80 hover:-translate-y-1">
+                  <Save size={24} /> {receitaEmEdicaoId ? 'Atualizar Produto' : 'Salvar Produto e Deduzir Estoque'}
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -654,20 +742,30 @@ export default function Pricing() {
                   <th className="p-5">Nome do Produto</th>
                   <th className="p-5">Data</th>
                   <th className="p-5 text-center">Rendimento</th>
-                  <th className="p-5">Custo Unitário</th>
+                  <th className="p-5">Custo Unitario</th>
                   <th className="p-5">Preço Venda Unitário</th>
-                  <th className="p-5">Custo Total (Lote)</th>
+                  <th className="p-5 text-right">Ação</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
                 {receitas.map(r => (
                   <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                    <td className="p-5 font-bold text-slate-800">{r.nome}</td>
+                    <td className="p-5 font-bold text-slate-800 flex items-center gap-3">
+                      {r.imagemUrl && <img src={r.imagemUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />}
+                      {r.nome}
+                    </td>
                     <td className="p-5 text-slate-500">{new Date(r.dataCriacao).toLocaleDateString()}</td>
                     <td className="p-5 text-slate-600 text-center font-bold">{r.rendimento}</td>
                     <td className="p-5 text-slate-600 font-medium">R$ {r.custoTotalUnitario.toFixed(2)}</td>
                     <td className="p-5 text-emerald-600 font-bold bg-emerald-50/30">R$ {r.precoSugeridoUnitario.toFixed(2)}</td>
-                    <td className="p-5 text-slate-400">R$ {r.custoTotal.toFixed(2)}</td>
+                    <td className="p-5 text-right">
+                      <button
+                        onClick={() => carregarReceitaParaEdicao(r)}
+                        className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold rounded-xl text-xs hover:bg-indigo-100 transition-colors inline-flex items-center gap-1"
+                      >
+                        <Edit size={14} /> Editar
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {receitas.length === 0 && (
@@ -681,6 +779,39 @@ export default function Pricing() {
             </table>
           </div>
         </motion.div>
+      )}
+      {/* Modal de Análise de Precificação por IA */}
+      {aiAnalysisModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  <Sparkles size={18} />
+                </div>
+                <h3 className="font-extrabold text-slate-900 text-sm">Análise de Preço por IA</h3>
+              </div>
+              <button onClick={() => setAiAnalysisModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            {aiAnalysisLoading ? (
+              <div className="p-8 text-center space-y-3">
+                <Sparkles size={28} className="mx-auto text-purple-600 animate-spin" />
+                <p className="text-xs font-bold text-slate-700">O Llama AI está calculando as melhores margens para {precificacao.nome}...</p>
+              </div>
+            ) : (
+              <div className="space-y-3 text-xs leading-relaxed text-slate-800 bg-purple-50/50 p-4 rounded-2xl border border-purple-100 font-medium whitespace-pre-wrap">
+                {aiAnalysisText}
+              </div>
+            )}
+
+            <button onClick={() => setAiAnalysisModalOpen(false)} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800">
+              Entendido
+            </button>
+          </motion.div>
+        </div>
       )}
     </div>
   );

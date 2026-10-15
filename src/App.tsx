@@ -1,146 +1,463 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useAppContext } from './context/AppContext';
 import Pricing from './componentes/Pricing';
 import Dashboard from './componentes/Dashboard';
 import Expenses from './componentes/Expenses';
 import Products from './componentes/Products';
 import Reports from './componentes/Reports';
-import { LayoutDashboard, Calculator, Receipt, Package, FileText, Menu, X, Sparkles } from 'lucide-react';
+import AuthModal from './componentes/AuthModal';
+import ProfileModal from './componentes/ProfileModal';
+import SettingsModal from './componentes/SettingsModal';
+import SupportModal from './componentes/SupportModal';
+import Preloader from './componentes/Preloader';
+import LlamaAiAdvisor from './componentes/LlamaAiAdvisor';
+import PrivacyPolicy from './componentes/PrivacyPolicy';
+import NotFound from './componentes/NotFound';
+import ThankYouModal from './componentes/ThankYouModal';
+import {
+  LayoutDashboard,
+  Calculator,
+  Receipt,
+  Package,
+  FileText,
+  Menu,
+  X,
+  Sparkles,
+  User,
+  LogIn,
+  Building,
+  Bell,
+  Settings,
+  LifeBuoy,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  ShieldCheck,
+  Award
+} from 'lucide-react';
 
-function App() {
-  const [activeView, setActiveView] = useState<'dashboard' | 'precificacao' | 'despesas' | 'produtos' | 'relatorios'>('dashboard');
+function AppContent() {
+  const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState<'dashboard' | 'precificacao' | 'despesas' | 'produtos' | 'relatorios' | 'privacidade' | '404'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Modals state
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+  const [thankYouOpen, setThankYouOpen] = useState(false);
+
+  // Auto-save toast feedback
+  const [autoSaveNotice, setAutoSaveNotice] = useState<string | null>(null);
+
+  const { usuario, produtos, insumos } = useAppContext();
+
+  // Initial Preloader simulation & Dynamic Meta Title Updates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 900);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const titleMap: Record<string, { title: string; desc: string }> = {
+      dashboard: { title: 'Dashboard • EMPREDESC PRO', desc: 'Painel de controle financeiro para microentreendedores.' },
+      precificacao: { title: 'Calculadora de Precificação • EMPREDESC PRO', desc: 'Precificação exata por insumo, margem de lucro e taxas de cartão.' },
+      produtos: { title: 'Estoque & Produtos • EMPREDESC PRO', desc: 'Gerenciamento de estoque, reposições e catálogo de vendas.' },
+      despesas: { title: 'Gestão de Despesas • EMPREDESC PRO', desc: 'Controle de custos fixos e variáveis para MEI.' },
+      relatorios: { title: 'Relatórios MEI & DRE • EMPREDESC PRO', desc: 'Relatório financeiro, DRE e controle de limite DASN-SIMEI.' },
+      privacidade: { title: 'Política de Privacidade & LGPD • EMPREDESC PRO', desc: 'Termos de privacidade e proteção de dados do microentreendedor.' },
+      '404': { title: 'Página Não Encontrada (404) • EMPREDESC PRO', desc: 'Recurso não localizado.' }
+    };
+
+    const current = titleMap[activeView] || titleMap.dashboard;
+    document.title = current.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', current.desc);
+  }, [activeView]);
+
+  // Low stock calculation for notification bell
+  const produtosEsgotados = produtos.filter(p => p.estoque === 0);
+  const produtosPoucoEstoque = produtos.filter(p => p.estoque > 0 && p.estoque <= 3);
+  const insumosBaixos = insumos.filter(i => i.estoqueTotal < i.tamanhoPacote * 0.2);
+
+  const totalNotificacoes = produtosEsgotados.length + produtosPoucoEstoque.length + insumosBaixos.length;
+
+  const triggerAutoSaveFeedback = (msg = 'Dados salvos automaticamente!') => {
+    setAutoSaveNotice(msg);
+    setTimeout(() => setAutoSaveNotice(null), 2500);
+  };
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'from-blue-500 to-cyan-500' },
     { id: 'precificacao', label: 'Precificação', icon: Calculator, color: 'from-purple-500 to-pink-500' },
-    { id: 'produtos', label: 'Produtos', icon: Package, color: 'from-green-500 to-emerald-500' },
+    { id: 'produtos', label: 'Estoque & Produtos', icon: Package, color: 'from-green-500 to-emerald-500' },
     { id: 'despesas', label: 'Despesas', icon: Receipt, color: 'from-orange-500 to-red-500' },
-    { id: 'relatorios', label: 'Relatórios', icon: FileText, color: 'from-indigo-500 to-purple-500' },
+    { id: 'relatorios', label: 'Relatórios MEI', icon: FileText, color: 'from-indigo-500 to-purple-500' },
   ];
 
+  if (loading) {
+    return <Preloader />;
+  }
+
   return (
-    <AppProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        {/* Navbar with Glassmorphism */}
-        <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/20 shadow-sm">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased flex flex-col justify-between selection:bg-indigo-600 selection:text-white">
+      <div>
+        {/* Sleek Modern Header */}
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              {/* Logo */}
+
+              {/* Company Logo & Brand */}
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 cursor-pointer group select-none"
+                onClick={() => setActiveView('dashboard')}
               >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                  <div className="relative px-3 py-2 bg-white rounded-lg">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
-                  </div>
+                <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-violet-600 text-white shadow-md shadow-indigo-500/20 group-hover:shadow-indigo-500/40 group-hover:scale-105 transition-all duration-300">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" fillOpacity="0.9"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white"></span>
+                  </span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">IMPREDESC</h1>
-                  <p className="text-xs text-slate-400 font-medium">Gestão Financeira</p>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-base font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-none">
+                      {usuario?.nomeNegocio ? usuario.nomeNegocio : 'EMPREDESC'}
+                    </h1>
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-extrabold text-[9px] uppercase tracking-wider">
+                      PRO
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 tracking-wide mt-0.5">
+                    <Building size={10} className="text-indigo-500" /> Sistema Empresarial MEI
+                  </span>
                 </div>
               </motion.div>
               
-              {/* Desktop Menu */}
-              <div className="hidden md:flex items-center gap-1">
-                {navItems.map((item, idx) => {
+              {/* Desktop Menu Navigation Bar */}
+              <nav className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/70">
+                {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeView === item.id;
                   return (
-                    <motion.button
+                    <button
                       key={item.id}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      onClick={() => setActiveView(item.id as any)}
-                      className={`relative group flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                      onClick={() => { setActiveView(item.id as any); triggerAutoSaveFeedback(); }}
+                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} text-white shadow-lg shadow-blue-500/30`
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/60 font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                       }`}
                     >
-                      {isActive && (
-                        <motion.div
-                          layoutId="active-tab"
-                          className="absolute inset-0 bg-white/10 rounded-xl"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                        />
-                      )}
-                      <Icon size={18} className="relative z-10" />
-                      <span className="relative z-10">{item.label}</span>
-                    </motion.button>
+                      <Icon size={15} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
+                      <span>{item.label}</span>
+                    </button>
                   );
                 })}
+              </nav>
+
+              {/* Header Right Actions */}
+              <div className="hidden md:flex items-center gap-2">
+                {/* Notifications Bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/80 hover:bg-slate-200/70 text-slate-600 transition-colors relative shadow-2xs"
+                    title="Avisos de Estoque"
+                  >
+                    <Bell size={18} />
+                    {totalNotificacoes > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                        {totalNotificacoes}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Popover */}
+                  <AnimatePresence>
+                    {notificationsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                        className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4 z-50 text-xs space-y-3"
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                          <span className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Alertas de Estoque ({totalNotificacoes})</span>
+                          <button onClick={() => setNotificationsOpen(false)} className="text-slate-400 hover:text-slate-600">
+                            <X size={14} />
+                          </button>
+                        </div>
+
+                        <div className="max-h-60 overflow-y-auto space-y-2">
+                          {totalNotificacoes === 0 ? (
+                            <div className="p-4 text-center text-slate-400 font-medium">
+                              Nenhum alerta de estoque pendente! 🎉
+                            </div>
+                          ) : (
+                            <>
+                              {produtosEsgotados.map(p => (
+                                <div key={p.id} className="p-2.5 rounded-xl bg-rose-50 border border-rose-100 flex items-start gap-2 text-rose-900">
+                                  <AlertTriangle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="font-bold text-xs">{p.nome} esgotado</p>
+                                    <p className="text-[10px] text-rose-700">Reponha no estoque para continuar vendendo.</p>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {produtosPoucoEstoque.map(p => (
+                                <div key={p.id} className="p-2.5 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-2 text-amber-900">
+                                  <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="font-bold text-xs">{p.nome} está acabando</p>
+                                    <p className="text-[10px] text-amber-700">Restam {p.estoque} unidades no estoque.</p>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {insumosBaixos.map(i => (
+                                <div key={i.id} className="p-2.5 rounded-xl bg-sky-50 border border-sky-100 flex items-start gap-2 text-sky-900">
+                                  <AlertTriangle size={15} className="text-sky-600 shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="font-bold text-xs">Insumo baixo: {i.nome}</p>
+                                    <p className="text-[10px] text-sky-700">Faça reposição de insumos na aba Precificação.</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Support Button */}
+                <button
+                  onClick={() => setSupportModalOpen(true)}
+                  className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/80 hover:bg-slate-200/70 text-slate-600 transition-colors shadow-2xs"
+                  title="Suporte Técnico"
+                >
+                  <LifeBuoy size={18} />
+                </button>
+
+                {/* Settings Button */}
+                <button
+                  onClick={() => setSettingsModalOpen(true)}
+                  className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/80 hover:bg-slate-200/70 text-slate-600 transition-colors shadow-2xs"
+                  title="Configurações e Diretrizes"
+                >
+                  <Settings size={18} />
+                </button>
+
+                {/* Profile / Account Badge */}
+                {usuario ? (
+                  <button
+                    onClick={() => setProfileModalOpen(true)}
+                    className="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/80 transition-colors text-left shadow-2xs"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs">
+                      {usuario.nome ? usuario.nome[0].toUpperCase() : 'M'}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900 leading-tight line-clamp-1">{usuario.nome}</p>
+                      <p className="text-[10px] text-indigo-600 font-semibold">{usuario.nomeNegocio || 'MEI'}</p>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 ml-1">
+                    <button
+                      onClick={() => { setAuthModalMode('login'); setAuthModalOpen(true); }}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors"
+                    >
+                      Entrar
+                    </button>
+                    <button
+                      onClick={() => { setAuthModalMode('register'); setAuthModalOpen(true); }}
+                      className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5"
+                    >
+                      <User size={14} /> Criar Conta MEI
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Mobile Menu Button */}
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2.5 hover:bg-slate-100 rounded-xl transition-colors duration-300"
-              >
-                <motion.div
-                  animate={{ rotate: mobileMenuOpen ? 90 : 0 }}
-                  transition={{ duration: 0.3 }}
+              <div className="lg:hidden flex items-center gap-2">
+                <button
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  className="p-2 bg-slate-100 rounded-lg border border-slate-200 text-slate-600 relative"
                 >
-                  {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </motion.div>
-              </motion.button>
+                  <Bell size={18} />
+                  {totalNotificacoes > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+                      {totalNotificacoes}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 transition-colors"
+                >
+                  {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
+              </div>
             </div>
 
-            {/* Mobile Menu */}
+            {/* Mobile Navigation Drawer */}
             <AnimatePresence>
               {mobileMenuOpen && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="md:hidden border-t border-slate-200/50 bg-white/80 backdrop-blur-sm"
+                  className="lg:hidden border-t border-slate-200/80 bg-white"
                 >
-                  <div className="p-4 space-y-2">
+                  <div className="p-4 space-y-2 text-sm">
                     {navItems.map(item => {
                       const Icon = item.icon;
                       return (
-                        <motion.button
+                        <button
                           key={item.id}
-                          whileHover={{ x: 4 }}
                           onClick={() => {
                             setActiveView(item.id as any);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold transition-all ${
                             activeView === item.id
-                              ? `bg-gradient-to-r ${item.color} text-white shadow-lg`
+                              ? 'bg-indigo-600 text-white shadow-xs'
                               : 'text-slate-600 hover:bg-slate-100'
                           }`}
                         >
                           <Icon size={18} />
                           {item.label}
-                        </motion.button>
+                        </button>
                       );
                     })}
+
+                    <div className="pt-2 border-t border-slate-200 mt-2 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => { setSettingsModalOpen(true); setMobileMenuOpen(false); }}
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 font-bold text-slate-700 text-xs"
+                      >
+                        <Settings size={15} /> Configurações
+                      </button>
+                      <button
+                        onClick={() => { setSupportModalOpen(true); setMobileMenuOpen(false); }}
+                        className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-indigo-50 font-bold text-indigo-700 text-xs"
+                      >
+                        <LifeBuoy size={15} /> Suporte
+                      </button>
+                    </div>
+
+                    <div className="pt-2">
+                      {usuario ? (
+                        <button
+                          onClick={() => { setProfileModalOpen(true); setMobileMenuOpen(false); }}
+                          className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs"
+                        >
+                          <User size={15} /> Perfil MEI ({usuario.nome})
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { setAuthModalMode('register'); setAuthModalOpen(true); setMobileMenuOpen(false); }}
+                          className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs"
+                        >
+                          <LogIn size={15} /> Criar Conta
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-        </nav>
+        </header>
 
-        {/* Main Content with smooth transitions */}
-        <div className="pt-8 pb-12">
+        {/* Auto-Save Toast Alert */}
+        <AnimatePresence>
+          {autoSaveNotice && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-2 text-xs font-bold"
+            >
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              {autoSaveNotice}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Breadcrumb Navigation Bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <nav className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-white/60 p-2.5 rounded-xl border border-slate-200/60 shadow-2xs backdrop-blur-sm">
+            <button onClick={() => setActiveView('dashboard')} className="hover:text-indigo-600 transition-colors flex items-center gap-1">
+              Início
+            </button>
+            <ChevronRight size={12} className="text-slate-300" />
+            <span className="text-slate-900 font-bold capitalize">
+              {activeView === 'precificacao' ? 'Calculadora de Precificação' :
+               activeView === 'produtos' ? 'Estoque & Produtos' :
+               activeView === 'despesas' ? 'Gestão de Despesas' :
+               activeView === 'relatorios' ? 'Relatórios MEI & DRE' :
+               activeView === 'privacidade' ? 'Política de Privacidade' :
+               activeView === '404' ? 'Página 404' : 'Dashboard'}
+            </span>
+
+            {/* Promise badge */}
+            <div className="ml-auto hidden sm:flex items-center gap-1.5 text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-bold">
+              <ShieldCheck size={12} /> Promessa de Suporte em até 2h úteis
+            </div>
+          </nav>
+        </div>
+
+        {/* Main Content View Switcher */}
+        <div className="pt-4 pb-12">
           <AnimatePresence mode="wait">
+            {activeView === 'privacidade' && (
+              <motion.div
+                key="privacidade"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <PrivacyPolicy onBack={() => setActiveView('dashboard')} />
+              </motion.div>
+            )}
+            {activeView === '404' && (
+              <motion.div
+                key="404"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                <NotFound onGoHome={() => setActiveView('dashboard')} />
+              </motion.div>
+            )}
             {activeView === 'dashboard' && (
               <motion.div
                 key="dashboard"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
               >
                 <Dashboard setActiveView={setActiveView as any} />
               </motion.div>
@@ -148,10 +465,10 @@ function App() {
             {activeView === 'precificacao' && (
               <motion.div
                 key="precificacao"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
               >
                 <Pricing />
               </motion.div>
@@ -159,10 +476,10 @@ function App() {
             {activeView === 'produtos' && (
               <motion.div
                 key="produtos"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
               >
                 <Products />
               </motion.div>
@@ -170,10 +487,10 @@ function App() {
             {activeView === 'despesas' && (
               <motion.div
                 key="despesas"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
               >
                 <Expenses />
               </motion.div>
@@ -181,10 +498,10 @@ function App() {
             {activeView === 'relatorios' && (
               <motion.div
                 key="relatorios"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
               >
                 <Reports />
               </motion.div>
@@ -192,6 +509,72 @@ function App() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Global Footer with Reserved Rights and Company Disclaimer */}
+      <footer className="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+          <div>
+            <p className="font-bold text-white">
+              {usuario?.nomeNegocio ? `${usuario.nomeNegocio} - Gestão Financeira` : 'IMPREDESC Plataforma MEI'}
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Todos os direitos da plataforma são reservados a <a href="https://empredesc.com.br" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline font-bold">empredesc.com.br</a>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-[11px] font-semibold">
+            <button onClick={() => setActiveView('privacidade')} className="hover:text-white transition-colors">
+              Política de Privacidade
+            </button>
+            <span>•</span>
+            <button onClick={() => setSettingsModalOpen(true)} className="hover:text-white transition-colors">
+              Diretrizes
+            </button>
+            <span>•</span>
+            <button onClick={() => setSupportModalOpen(true)} className="hover:text-white transition-colors">
+              Suporte (Até 2h)
+            </button>
+            <span>•</span>
+            <span className="px-2.5 py-1 bg-white/10 rounded-full text-indigo-300 font-extrabold">
+              v3.0.0 PRO
+            </span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modals */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
+      />
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+      />
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+      />
+      <SupportModal
+        isOpen={supportModalOpen}
+        onClose={() => setSupportModalOpen(false)}
+      />
+      <ThankYouModal
+        isOpen={thankYouOpen}
+        onClose={() => setThankYouOpen(false)}
+      />
+
+      {/* Floating Llama AI Assistant */}
+      <LlamaAiAdvisor />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
     </AppProvider>
   );
 }
